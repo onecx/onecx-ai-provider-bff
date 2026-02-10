@@ -1,1 +1,0 @@
-* xref:onecx-ai-management-bff:index.adoc[Backend For Frontend]

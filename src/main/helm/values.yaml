@@ -3,7 +3,7 @@ app:
   db:
     enabled: true
   image:
-    repository: "onecx-apps/onecx-ai-management-bff"
+    repository: "onecx/onecx-ai-provider-bff"
   operator:
     # Permission
     permission:

@@ -1,5 +1,5 @@
 
-include::onecx-ai-management-bff-attributes.adoc[opts=optional]
+include::onecx-ai-provider-bff-attributes.adoc[opts=optional]
 
 {docker-registry}[Link to Docker registry]
 
@@ -16,7 +16,7 @@ quarkus.http.auth.permission.default.paths=/*
 quarkus.http.auth.permission.default.policy=authenticated
 onecx.permissions.application-id=${quarkus.application.name}
 org.eclipse.microprofile.rest.client.propagateHeaders=apm-principal-token
-%prod.quarkus.rest-client.onecx_ai_service.url=http://onecx-ai-management-svc:8080
+%prod.quarkus.rest-client.onecx_ai_service.url=http://onecx-ai-provider-svc:8080
 quarkus.openapi-generator.codegen.input-base-dir=target/tmp/openapi
 quarkus.openapi-generator.codegen.spec.ai_management_svc_internal_yaml.config-key=onecx_ai_service
 quarkus.openapi-generator.codegen.spec.ai_management_svc_internal_yaml.base-package=gen.org.tkit.onecx.ai.management.bff.client
@@ -34,7 +34,7 @@ quarkus.openapi-generator.codegen.spec.ai_management_svc_internal_yaml.enable-se
 .Extensions List
 [%collapsible]
 ====
-include::onecx-ai-management-bff-extensions.adoc[opts=optional]
+include::onecx-ai-provider-bff-extensions.adoc[opts=optional]
 ====
 
 == Helm
@@ -49,7 +49,7 @@ app:
   db:
     enabled: true
   image:
-    repository: "onecx-apps/onecx-ai-management-bff"
+    repository: "onecx/onecx-ai-provider-bff"
   operator:
     # Permission
     permission:

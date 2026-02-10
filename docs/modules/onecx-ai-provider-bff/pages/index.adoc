@@ -1,0 +1,7 @@
+include::onecx-ai-provider-bff-attributes.adoc[opts=optional]
+
+= OneCX AI Provider Backend for Frontend
+
+
+
+include::onecx-ai-provider-bff-docs.adoc[opts=optional]

@@ -1,5 +1,5 @@
 
-include::onecx-ai-management-bff-attributes.adoc[opts=optional]
+include::onecx-ai-provider-bff-attributes.adoc[opts=optional]
 
 [.extension.table.searchable, cols="50,.^15,.^15,.^20"]
 |===

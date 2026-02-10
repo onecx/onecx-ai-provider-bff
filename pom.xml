@@ -10,7 +10,8 @@
         <version>2.3.0</version>
     </parent>
 
-    <artifactId>onecx-ai-management-bff</artifactId>
+    <artifactId>onecx-ai-provider-bff</artifactId>
+    <name>OneCX AI Provider Backend for Frontend</name>
     <version>999-SNAPSHOT</version>
     <dependencies>
         <dependency>
@@ -182,7 +183,7 @@
                             <goal>wget</goal>
                         </goals>
                         <configuration>
-                            <uri>https://raw.githubusercontent.com/onecx-apps/onecx-ai-management-svc/refs/heads/main/src/main/openapi/onecx-ai-internal.yaml</uri>
+                            <uri>https://raw.githubusercontent.com/onecx/onecx-ai-provider-svc/refs/heads/main/src/main/openapi/onecx-ai-internal.yaml</uri>
                             <outputDirectory>target/tmp/openapi</outputDirectory>
                             <outputFileName>ai-management-svc-internal.yaml</outputFileName>
                             <skipCache>true</skipCache>
