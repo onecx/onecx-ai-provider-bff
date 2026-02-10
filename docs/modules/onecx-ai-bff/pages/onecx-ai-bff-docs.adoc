@@ -1,0 +1,139 @@
+
+include::onecx-ai-management-bff-attributes.adoc[opts=optional]
+
+=== Default properties
+
+.{properties-file}
+[%collapsible%open]
+====
+[source,properties,subs=attributes+]
+----
+quarkus.http.auth.permission.health.paths=/q/*
+quarkus.http.auth.permission.health.policy=permit
+quarkus.http.auth.permission.default.paths=/*
+quarkus.http.auth.permission.default.policy=authenticated
+onecx.permissions.application-id=${quarkus.application.name}
+%prod.quarkus.rest-client.onecx_ai_svc.url=http://onecx-ai-svc:8080
+org.eclipse.microprofile.rest.client.propagateHeaders=apm-principal-token
+%prod.quarkus.oidc-client.client-id=${quarkus.application.name}
+quarkus.openapi-generator.codegen.input-base-dir=target/tmp/openapi
+quarkus.openapi-generator.codegen.spec.ai_management_internal_openapi_yaml.config-key=onecx_ai_service
+quarkus.openapi-generator.codegen.spec.ai_management_internal_openapi_yaml.base-package=gen.org.tkit.onecx.ai.management.client
+quarkus.openapi-generator.codegen.spec.ai_management_internal_openapi_yaml.return-response=true
+quarkus.openapi-generator.codegen.spec.ai_management_internal_openapi_yaml.additional-api-type-annotations=@org.eclipse.microprofile.rest.client.annotation.RegisterClientHeaders;
+quarkus.openapi-generator.codegen.spec.ai_management_internal_openapi_yaml.additional-model-type-annotations=@io.quarkus.runtime.annotations.RegisterForReflection;
+quarkus.openapi-generator.codegen.spec.ai_management_internal_openapi_yaml.enable-security-generation=false
+quarkus.openapi-generator.codegen.spec.ai_management_internal_openapi_yaml.type-mappings.File=byte[]
+%prod.quarkus.rest-client.onecx_ai_service.providers=io.quarkus.oidc.client.reactive.filter.OidcClientRequestReactiveFilter
+%prod.quarkus.rest-client.onecx_ai_service.url=http://onecx-ai-svc:8080
+----
+====
+
+=== Extensions
+
+include::onecx-ai-management-bff-extensions.adoc[opts=optional]
+
+=== Container
+
+{docker-registry}[Docker registry]
+
+
+=== Helm
+
+{helm-registry}[Helm registry]
+
+Default values
+
+.{helm-file}
+[source,yaml]
+----
+app:
+  name: bff
+  db:
+    enabled: true
+  image:
+    repository: "onecx-apps/onecx-ai-management-bff"
+  operator:
+    # Permission
+    permission:
+      enabled: true
+      spec:
+        permissions:
+          AI_MANAGEMENT_BFF:
+            read: permission on all GET requests and POST search
+            write: permission on PUT, POST, PATCH requests, where objects are saved or updated
+            delete: permission on all DELETE requests
+    keycloak:
+      client:
+        enabled: true
+        spec:
+          kcConfig:
+            defaultClientScopes: [ocx-ai:all, ocx-pm:read]
+
+----
+
+---
+
+read]
+
+----
+
+:
+      client:
+        enabled: true
+        spec:
+          kcConfig:
+            defaultClientScopes: [ocx-ev:all, ocx-lo:read, ocx-pm:read]
+
+----
+
+_store_v1_yaml.return-response=true
+quarkus.openapi-generator.codegen.spec.onecx_product_store_v1_yaml.additional-api-type-annotations=@org.eclipse.microprofile.rest.client.annotation.RegisterClientHeaders;
+quarkus.openapi-generator.codegen.spec.onecx_product_store_v1_yaml.additional-model-type-annotations=@io.quarkus.runtime.annotations.RegisterForReflection;
+quarkus.openapi-generator.codegen.spec.onecx_product_store_v1_yaml.enable-security-generation=false
+----
+====
+
+=== Extensions
+
+include::onecx-ai-management-bff-extensions.adoc[opts=optional]
+
+=== Container
+
+{docker-registry}[Docker registry]
+
+
+=== Helm
+
+{helm-registry}[Helm registry]
+
+Default values
+
+.{helm-file}
+[source,yaml]
+----
+app:
+  name: bff
+  image:
+    repository: "onecx-apps/onecx-ai-management-bff"
+  operator:
+    # Permission
+    permission:
+      enabled: true
+      spec:
+        permissions:
+          ai:
+            read: permission on all GET requests and POST search
+            write: permission on PUT, POST, PATCH requests, where objects are saved or updated
+            delete: permission on all DELETE requests
+          product:
+            read: permission on all GET requests and POST search
+    keycloak:
+      client:
+        enabled: true
+        spec:
+          kcConfig:
+            defaultClientScopes: [ ocx-hp:all, ocx-ps:read, ocx-pm:read ]
+
+----
+

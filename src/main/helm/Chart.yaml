@@ -1,0 +1,19 @@
+apiVersion: v2
+name: onecx-ai-management-bff
+version: 0.0.0
+appVersion: 0.0.0
+description: onecx-ai-management-bff BFF
+keywords:
+  - ai management bff
+  - onecx-ai-bff
+  - onecx-ai-management-bff
+sources:
+  - https://github.com/onecx-apps/onecx-ai-management-bff
+maintainers:
+  - name: Tkit Developer
+    email: tkit_dev@1000kit.org
+dependencies:
+  - name: helm-quarkus-app
+    alias: app
+    version: ^0
+    repository: oci://ghcr.io/onecx/charts

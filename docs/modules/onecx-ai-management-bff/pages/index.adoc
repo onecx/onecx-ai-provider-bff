@@ -1,0 +1,7 @@
+include::onecx-ai-management-bff-attributes.adoc[opts=optional]
+
+= onecx-ai-management-bff
+
+
+
+include::onecx-ai-management-bff-docs.adoc[opts=optional]
