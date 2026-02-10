@@ -1,0 +1,29 @@
+app:
+  name: bff
+  db:
+    enabled: true
+  image:
+    repository: "onecx/onecx-ai-provider-bff"
+  operator:
+    # Permission
+    permission:
+      enabled: true
+      spec:
+        permissions:
+          configuration:
+            read: permission on all GET requests and POST search
+            write: permission on PUT, POST, PATCH requests, where objects are saved or updated
+            delete: permission on all DELETE requests
+          provider:
+            read: permission on all GET requests and POST search
+            write: permission on PUT, POST, PATCH requests, where objects are saved or updated
+          mcpServer:
+            read: permission on all GET requests and POST search
+            write: permission on PUT, POST, PATCH requests, where objects are saved or updated
+            delete: permission on all DELETE requests
+    keycloak:
+      client:
+        enabled: true
+        spec:
+          kcConfig:
+            defaultClientScopes: [ocx-ai:all, ocx-pm:read]
