@@ -1,7 +1,5 @@
 package org.tkit.onecx.ai.bff.rs;
 
-import org.eclipse.microprofile.health.HealthCheck;
-
 import io.quarkus.runtime.annotations.ConfigDocFilename;
 import io.quarkus.runtime.annotations.ConfigPhase;
 import io.quarkus.runtime.annotations.ConfigRoot;
