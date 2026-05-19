@@ -283,4 +283,35 @@ class ProviderRestControllerTest extends AbstractTest {
                 .then()
                 .statusCode(Response.Status.BAD_REQUEST.getStatusCode());
     }
+
+    @Test
+    void getProviderHealthStatusById_200Test() {
+        ProviderHealthStatusInternal status = new ProviderHealthStatusInternal()
+                .status(ProviderHealthStatusInternal.StatusEnum.HEALTHY);
+
+        String testId = "1";
+        mockServerClient.when(
+                request().withPath("/internal/providers/" + testId + "/health")
+                        .withMethod(HttpMethod.GET))
+                .withPriority(100)
+                .withId(MOCK_ID)
+                .respond(httpRequest -> response()
+                        .withStatusCode(Response.Status.OK.getStatusCode())
+                        .withContentType(MediaType.APPLICATION_JSON)
+                        .withBody(JsonBody.json(status)));
+
+        var response = given()
+                .when()
+                .auth().oauth2(keycloakTestClient.getAccessToken(ADMIN))
+                .header(APM_HEADER_PARAM, ADMIN)
+                .contentType(APPLICATION_JSON)
+                .get(testId + "/health")
+                .then()
+                .statusCode(Response.Status.OK.getStatusCode())
+                .extract()
+                .as(ProviderHealthStatusDTO.class);
+
+        Assertions.assertNotNull(response);
+        Assertions.assertEquals(status.getStatus().toString(), response.getStatus().toString());
+    }
 }

@@ -71,6 +71,14 @@ public class ProviderRestController implements ProviderApiService {
     }
 
     @Override
+    public Response getProviderHealthStatus(String id) {
+        try (Response response = providerInternalApi.getProviderHealthStatus(id)) {
+            ProviderHealthStatusInternal healthStatus = response.readEntity(ProviderHealthStatusInternal.class);
+            return Response.status(response.getStatus()).entity(providerMapper.mapHealthStatus(healthStatus)).build();
+        }
+    }
+
+    @Override
     public Response updateProviderById(String id, UpdateProviderRequestDTO updateProviderRequestDTO) {
         UpdateProviderRequestInternal updateProviderRequest = providerMapper
                 .mapUpdate(updateProviderRequestDTO);
