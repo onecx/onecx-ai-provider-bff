@@ -1,0 +1,74 @@
+[.configuration-legend]
+icon:lock[title=Fixed at build time] Configuration property fixed at build time - All other configuration properties are overridable at runtime
+[.configuration-reference.searchable, cols="80,.^10,.^10"]
+|===
+
+h|[.header-title]##Configuration property##
+h|Type
+h|Default
+
+a| [[onecx-ai-provider-bff_onecx-ai-provider-health-check-cache-enabled]] [.property-path]##link:#onecx-ai-provider-bff_onecx-ai-provider-health-check-cache-enabled[`+++onecx.ai.provider.health-check.cache-enabled+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++onecx.ai.provider.health-check.cache-enabled+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Enable or disable caching
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++ONECX_AI_PROVIDER_HEALTH_CHECK_CACHE_ENABLED+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++ONECX_AI_PROVIDER_HEALTH_CHECK_CACHE_ENABLED+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++true+++`
+
+a| [[onecx-ai-provider-bff_onecx-ai-provider-health-check-cache-expire-after]] [.property-path]##link:#onecx-ai-provider-bff_onecx-ai-provider-health-check-cache-expire-after[`+++onecx.ai.provider.health-check.cache-expire-after+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++onecx.ai.provider.health-check.cache-expire-after+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Cache expiration time in seconds
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++ONECX_AI_PROVIDER_HEALTH_CHECK_CACHE_EXPIRE_AFTER+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++ONECX_AI_PROVIDER_HEALTH_CHECK_CACHE_EXPIRE_AFTER+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|`+++310S+++`
+
+a| [[onecx-ai-provider-bff_onecx-ai-provider-health-check-cache-metrics-enabled]] [.property-path]##link:#onecx-ai-provider-bff_onecx-ai-provider-health-check-cache-metrics-enabled[`+++onecx.ai.provider.health-check.cache-metrics-enabled+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++onecx.ai.provider.health-check.cache-metrics-enabled+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Enable or disable cache metrics
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++ONECX_AI_PROVIDER_HEALTH_CHECK_CACHE_METRICS_ENABLED+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++ONECX_AI_PROVIDER_HEALTH_CHECK_CACHE_METRICS_ENABLED+++`
+endif::add-copy-button-to-env-var[]
+--
+|boolean
+|`+++true+++`
+
+|===
+

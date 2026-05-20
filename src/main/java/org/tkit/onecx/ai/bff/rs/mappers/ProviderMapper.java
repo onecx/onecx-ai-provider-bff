@@ -20,4 +20,6 @@ public interface ProviderMapper {
 
     @Mapping(target = "removeStreamItem", ignore = true)
     ProviderPageResultDTO mapPageResult(ProviderPageResultInternal providerPageResult);
+
+    ProviderHealthStatusDTO mapHealthStatus(ProviderHealthStatusInternal healthStatus);
 }

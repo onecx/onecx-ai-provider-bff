@@ -288,6 +288,31 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ProblemDetailResponse'
+  /providers/{id}/health:
+    get:
+      x-onecx:
+        permissions:
+          provider:
+            - read
+      tags:
+        - provider
+      description: Return Provider health status by its ID
+      operationId: getProviderHealthStatus
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProviderHealthStatus'
+        "404":
+          description: Not found
   /mcpServers:
     post:
       x-onecx:
@@ -427,6 +452,16 @@ paths:
                 $ref: '#/components/schemas/ProblemDetailResponse'
 components:
   schemas:
+    ProviderHealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+          enum:
+            - HEALTHY
+            - UNHEALTHY
+        checkedAt:
+          $ref: '#/components/schemas/OffsetDateTime'
     MCPServer:
       type: object
       required:

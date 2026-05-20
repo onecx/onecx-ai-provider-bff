@@ -3,5 +3,7 @@ include::onecx-ai-provider-bff-attributes.adoc[opts=optional]
 = OneCX AI Provider Backend for Frontend
 
 
+== Configuration
+include::onecx-ai-provider-bff.adoc[opts=optional]
 
 include::onecx-ai-provider-bff-docs.adoc[opts=optional]

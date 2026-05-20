@@ -10,6 +10,7 @@ import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.jboss.resteasy.reactive.ClientWebApplicationException;
 import org.jboss.resteasy.reactive.RestResponse;
 import org.jboss.resteasy.reactive.server.ServerExceptionMapper;
+import org.tkit.onecx.ai.bff.rs.AiProviderConfig;
 import org.tkit.onecx.ai.bff.rs.mappers.ExceptionMapper;
 import org.tkit.onecx.ai.bff.rs.mappers.ProviderMapper;
 import org.tkit.quarkus.log.cdi.LogService;
@@ -19,8 +20,11 @@ import gen.org.tkit.onecx.ai.management.bff.client.model.*;
 import gen.org.tkit.onecx.ai.management.bff.rs.internal.ProviderApiService;
 import gen.org.tkit.onecx.ai.management.bff.rs.internal.model.CreateProviderRequestDTO;
 import gen.org.tkit.onecx.ai.management.bff.rs.internal.model.ProblemDetailResponseDTO;
+import gen.org.tkit.onecx.ai.management.bff.rs.internal.model.ProviderHealthStatusDTO;
 import gen.org.tkit.onecx.ai.management.bff.rs.internal.model.ProviderSearchCriteriaDTO;
 import gen.org.tkit.onecx.ai.management.bff.rs.internal.model.UpdateProviderRequestDTO;
+import io.quarkus.cache.Cache;
+import io.quarkus.cache.CacheName;
 
 @ApplicationScoped
 @Transactional(value = Transactional.TxType.NOT_SUPPORTED)
@@ -35,6 +39,12 @@ public class ProviderRestController implements ProviderApiService {
 
     @Inject
     ExceptionMapper exceptionMapper;
+
+    @CacheName("onecx-ai-provider")
+    Cache cache;
+
+    @Inject
+    AiProviderConfig config;
 
     @Override
     public Response createProvider(CreateProviderRequestDTO createProviderRequestDTO) {
@@ -68,6 +78,30 @@ public class ProviderRestController implements ProviderApiService {
             ProviderInternal provider = response.readEntity(ProviderInternal.class);
             return Response.status(response.getStatus()).entity(providerMapper.map(provider)).build();
         }
+    }
+
+    @Override
+    public Response getProviderHealthStatus(String id) {
+        if (!config.healthCheck().cacheEnabled()) {
+            CachedProviderHealthStatus healthStatus = fetchProviderHealthStatus(id);
+            return Response.status(healthStatus.status()).entity(healthStatus.healthStatus()).build();
+        }
+
+        CachedProviderHealthStatus healthStatus = cache
+                .get(id, this::fetchProviderHealthStatus)
+                .await()
+                .indefinitely();
+        return Response.status(healthStatus.status()).entity(healthStatus.healthStatus()).build();
+    }
+
+    private CachedProviderHealthStatus fetchProviderHealthStatus(String id) {
+        try (Response response = providerInternalApi.getProviderHealthStatus(id)) {
+            ProviderHealthStatusInternal healthStatus = response.readEntity(ProviderHealthStatusInternal.class);
+            return new CachedProviderHealthStatus(response.getStatus(), providerMapper.mapHealthStatus(healthStatus));
+        }
+    }
+
+    private record CachedProviderHealthStatus(int status, ProviderHealthStatusDTO healthStatus) {
     }
 
     @Override
