@@ -294,7 +294,7 @@ class ProviderRestControllerTest extends AbstractTest {
 
         String testId = "1";
         ProviderHealthStatusRequestDTO requestDTO = new ProviderHealthStatusRequestDTO();
-        requestDTO.setProviders(java.util.List.of(testId));
+        requestDTO.setProviderIds(java.util.List.of(testId));
 
         mockServerClient.when(
                 request().withPath("/internal/providers/" + testId + "/health")
@@ -332,7 +332,7 @@ class ProviderRestControllerTest extends AbstractTest {
         String secondId = "multi-2";
 
         ProviderHealthStatusRequestDTO requestDTO = new ProviderHealthStatusRequestDTO();
-        requestDTO.setProviders(java.util.List.of(firstId, secondId));
+        requestDTO.setProviderIds(java.util.List.of(firstId, secondId));
 
         ProviderHealthStatusInternal firstStatus = new ProviderHealthStatusInternal()
                 .status(ProviderHealthStatusInternal.StatusEnum.HEALTHY);

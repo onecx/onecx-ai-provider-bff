@@ -296,8 +296,8 @@ paths:
             - read
       tags:
         - provider
-      description: Return Provider health status by its ID
-      operationId: getProviderHealthStatus
+      description: Return health statuses of providers by their ids
+      operationId: getProviderHealthStatusesByIds
       requestBody:
         required: true
         content:
@@ -473,7 +473,7 @@ components:
       required:
         - providers
       properties:
-        providers:
+        providerIds:
           type: array
           minItems: 1
           items:

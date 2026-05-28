@@ -91,7 +91,7 @@ class ProviderRestControllerCacheTest extends AbstractTest {
         String secondId = "cache-multi-2";
 
         ProviderHealthStatusRequestDTO requestDTO = new ProviderHealthStatusRequestDTO();
-        requestDTO.setProviders(java.util.List.of(firstId, secondId));
+        requestDTO.setProviderIds(java.util.List.of(firstId, secondId));
 
         String firstStatus = "HEALTHY";
         String secondStatus = "UNHEALTHY";

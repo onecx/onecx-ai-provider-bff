@@ -80,9 +80,9 @@ public class ProviderRestController implements ProviderApiService {
     }
 
     @Override
-    public Response getProviderHealthStatus(ProviderHealthStatusRequestDTO providerHealthStatusRequestDTO) {
+    public Response getProviderHealthStatusesByIds(ProviderHealthStatusRequestDTO providerHealthStatusRequestDTO) {
         boolean cacheEnabled = config.healthCheck().cacheEnabled();
-        List<ProviderHealthStatusDTO> providerHealthStatuses = providerHealthStatusRequestDTO.getProviders().stream()
+        List<ProviderHealthStatusDTO> providerHealthStatuses = providerHealthStatusRequestDTO.getProviderIds().stream()
                 .filter(Objects::nonNull)
                 .map(String::trim)
                 .map(id -> cacheEnabled
