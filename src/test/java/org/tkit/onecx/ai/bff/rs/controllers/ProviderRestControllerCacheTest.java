@@ -4,6 +4,7 @@ import static io.restassured.RestAssured.given;
 import static jakarta.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
+import static org.mockserver.verify.VerificationTimes.exactly;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -21,8 +22,8 @@ import org.mockserver.model.MediaType;
 import org.tkit.onecx.ai.bff.rs.AbstractTest;
 import org.tkit.onecx.ai.bff.rs.AiProviderConfig;
 
-import gen.org.tkit.onecx.ai.management.bff.client.model.ProviderHealthStatusInternal;
-import gen.org.tkit.onecx.ai.management.bff.rs.internal.model.ProviderHealthStatusDTO;
+import gen.org.tkit.onecx.ai.management.bff.rs.internal.model.ProviderHealthStatusRequestDTO;
+import gen.org.tkit.onecx.ai.management.bff.rs.internal.model.ProviderHealthStatusResponseDTO;
 import io.quarkiverse.mockserver.test.InjectMockServerClient;
 import io.quarkus.test.InjectMock;
 import io.quarkus.test.Mock;
@@ -86,34 +87,88 @@ class ProviderRestControllerCacheTest extends AbstractTest {
 
     @Test
     void getHealthCheckTest() {
-        String testId = "1";
+        String firstId = "cache-multi-1";
+        String secondId = "cache-multi-2";
 
-        ProviderHealthStatusInternal status = new ProviderHealthStatusInternal()
-                .status(ProviderHealthStatusInternal.StatusEnum.HEALTHY);
+        ProviderHealthStatusRequestDTO requestDTO = new ProviderHealthStatusRequestDTO();
+        requestDTO.setProviders(java.util.List.of(firstId, secondId));
+
+        String firstStatus = "HEALTHY";
+        String secondStatus = "UNHEALTHY";
 
         // create mock rest endpoint for permission svc
         mockServerClient.when(
-                request().withPath("/internal/providers/" + testId + "/health")
+                request().withPath("/internal/providers/" + firstId + "/health")
                         .withMethod(HttpMethod.GET))
                 .withPriority(100)
-                .withId("mockHealthCheck")
+                .withId("mockHealthCheck1")
                 .respond(httpRequest -> response()
                         .withStatusCode(Response.Status.OK.getStatusCode())
                         .withContentType(MediaType.APPLICATION_JSON)
-                        .withBody(JsonBody.json(status)));
+                        .withBody(JsonBody.json("{\"status\":\"" + firstStatus + "\"}")));
 
-        var output = given()
+        mockServerClient.when(
+                request().withPath("/internal/providers/" + secondId + "/health")
+                        .withMethod(HttpMethod.GET))
+                .withPriority(100)
+                .withId("mockHealthCheck2")
+                .respond(httpRequest -> response()
+                        .withStatusCode(Response.Status.OK.getStatusCode())
+                        .withContentType(MediaType.APPLICATION_JSON)
+                        .withBody(JsonBody.json("{\"status\":\"" + secondStatus + "\"}")));
+
+        var firstOutput = given()
                 .when()
                 .auth().oauth2(keycloakTestClient.getAccessToken(ADMIN))
                 .header(APM_HEADER_PARAM, ADMIN)
-                .get(testId + "/health")
+                .contentType(APPLICATION_JSON)
+                .body(requestDTO)
+                .post("/health")
                 .then()
                 .statusCode(Response.Status.OK.getStatusCode())
                 .contentType(APPLICATION_JSON)
-                .extract().as(ProviderHealthStatusDTO.class);
+                .extract().as(ProviderHealthStatusResponseDTO.class);
 
-        Assertions.assertNotNull(output);
-        Assertions.assertEquals(status.getStatus().toString(), output.getStatus().toString());
-        mockServerClient.clear("mockHealthCheck");
+        var secondOutput = given()
+                .when()
+                .auth().oauth2(keycloakTestClient.getAccessToken(ADMIN))
+                .header(APM_HEADER_PARAM, ADMIN)
+                .contentType(APPLICATION_JSON)
+                .body(requestDTO)
+                .post("/health")
+                .then()
+                .statusCode(Response.Status.OK.getStatusCode())
+                .contentType(APPLICATION_JSON)
+                .extract().as(ProviderHealthStatusResponseDTO.class);
+
+        Assertions.assertNotNull(firstOutput);
+        Assertions.assertNotNull(firstOutput.getProviderHealthStatuses());
+        Assertions.assertEquals(2, firstOutput.getProviderHealthStatuses().size());
+        Assertions.assertEquals(firstId, firstOutput.getProviderHealthStatuses().get(0).getProviderId());
+        Assertions.assertEquals(secondId, firstOutput.getProviderHealthStatuses().get(1).getProviderId());
+        Assertions.assertEquals(firstStatus,
+                firstOutput.getProviderHealthStatuses().get(0).getStatus().toString());
+        Assertions.assertEquals(secondStatus,
+                firstOutput.getProviderHealthStatuses().get(1).getStatus().toString());
+
+        Assertions.assertNotNull(secondOutput);
+        Assertions.assertNotNull(secondOutput.getProviderHealthStatuses());
+        Assertions.assertEquals(2, secondOutput.getProviderHealthStatuses().size());
+        Assertions.assertEquals(firstId, secondOutput.getProviderHealthStatuses().get(0).getProviderId());
+        Assertions.assertEquals(secondId, secondOutput.getProviderHealthStatuses().get(1).getProviderId());
+        Assertions.assertEquals(firstStatus,
+                secondOutput.getProviderHealthStatuses().get(0).getStatus().toString());
+        Assertions.assertEquals(secondStatus,
+                secondOutput.getProviderHealthStatuses().get(1).getStatus().toString());
+
+        mockServerClient.verify(
+                request().withPath("/internal/providers/" + firstId + "/health").withMethod(HttpMethod.GET),
+                exactly(1));
+        mockServerClient.verify(
+                request().withPath("/internal/providers/" + secondId + "/health").withMethod(HttpMethod.GET),
+                exactly(1));
+
+        mockServerClient.clear("mockHealthCheck1");
+        mockServerClient.clear("mockHealthCheck2");
     }
 }

@@ -1,5 +1,8 @@
 package org.tkit.onecx.ai.bff.rs.controllers;
 
+import java.util.List;
+import java.util.Objects;
+
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
@@ -18,11 +21,7 @@ import org.tkit.quarkus.log.cdi.LogService;
 import gen.org.tkit.onecx.ai.management.bff.client.api.ProviderInternalApi;
 import gen.org.tkit.onecx.ai.management.bff.client.model.*;
 import gen.org.tkit.onecx.ai.management.bff.rs.internal.ProviderApiService;
-import gen.org.tkit.onecx.ai.management.bff.rs.internal.model.CreateProviderRequestDTO;
-import gen.org.tkit.onecx.ai.management.bff.rs.internal.model.ProblemDetailResponseDTO;
-import gen.org.tkit.onecx.ai.management.bff.rs.internal.model.ProviderHealthStatusDTO;
-import gen.org.tkit.onecx.ai.management.bff.rs.internal.model.ProviderSearchCriteriaDTO;
-import gen.org.tkit.onecx.ai.management.bff.rs.internal.model.UpdateProviderRequestDTO;
+import gen.org.tkit.onecx.ai.management.bff.rs.internal.model.*;
 import io.quarkus.cache.Cache;
 import io.quarkus.cache.CacheName;
 
@@ -81,27 +80,26 @@ public class ProviderRestController implements ProviderApiService {
     }
 
     @Override
-    public Response getProviderHealthStatus(String id) {
-        if (!config.healthCheck().cacheEnabled()) {
-            CachedProviderHealthStatus healthStatus = fetchProviderHealthStatus(id);
-            return Response.status(healthStatus.status()).entity(healthStatus.healthStatus()).build();
-        }
+    public Response getProviderHealthStatus(ProviderHealthStatusRequestDTO providerHealthStatusRequestDTO) {
+        boolean cacheEnabled = config.healthCheck().cacheEnabled();
+        List<ProviderHealthStatusDTO> providerHealthStatuses = providerHealthStatusRequestDTO.getProviders().stream()
+                .filter(Objects::nonNull)
+                .map(String::trim)
+                .map(id -> cacheEnabled
+                        ? cache.get(id, this::fetchProviderHealthStatus).await().indefinitely()
+                        : fetchProviderHealthStatus(id))
+                .toList();
 
-        CachedProviderHealthStatus healthStatus = cache
-                .get(id, this::fetchProviderHealthStatus)
-                .await()
-                .indefinitely();
-        return Response.status(healthStatus.status()).entity(healthStatus.healthStatus()).build();
+        ProviderHealthStatusResponseDTO responseDTO = new ProviderHealthStatusResponseDTO();
+        responseDTO.setProviderHealthStatuses(providerHealthStatuses);
+        return Response.ok(responseDTO).build();
     }
 
-    private CachedProviderHealthStatus fetchProviderHealthStatus(String id) {
+    private ProviderHealthStatusDTO fetchProviderHealthStatus(String id) {
         try (Response response = providerInternalApi.getProviderHealthStatus(id)) {
             ProviderHealthStatusInternal healthStatus = response.readEntity(ProviderHealthStatusInternal.class);
-            return new CachedProviderHealthStatus(response.getStatus(), providerMapper.mapHealthStatus(healthStatus));
+            return providerMapper.mapHealthStatus(healthStatus, id);
         }
-    }
-
-    private record CachedProviderHealthStatus(int status, ProviderHealthStatusDTO healthStatus) {
     }
 
     @Override

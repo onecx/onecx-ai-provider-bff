@@ -38,11 +38,14 @@ class ProviderRestControllerTest extends AbstractTest {
 
     KeycloakTestClient keycloakTestClient = new KeycloakTestClient();
     static final String MOCK_ID = "MOCK";
+    static final String MOCK_ID_2 = "MOCK_2";
 
     @AfterEach
     void resetMockserver() {
         try {
             mockServerClient.clear(MOCK_ID);
+            mockServerClient.clear(MOCK_ID_2);
+
         } catch (Exception _) {
             // mockId not existing
         }
@@ -290,6 +293,9 @@ class ProviderRestControllerTest extends AbstractTest {
                 .status(ProviderHealthStatusInternal.StatusEnum.HEALTHY);
 
         String testId = "1";
+        ProviderHealthStatusRequestDTO requestDTO = new ProviderHealthStatusRequestDTO();
+        requestDTO.setProviders(java.util.List.of(testId));
+
         mockServerClient.when(
                 request().withPath("/internal/providers/" + testId + "/health")
                         .withMethod(HttpMethod.GET))
@@ -305,13 +311,74 @@ class ProviderRestControllerTest extends AbstractTest {
                 .auth().oauth2(keycloakTestClient.getAccessToken(ADMIN))
                 .header(APM_HEADER_PARAM, ADMIN)
                 .contentType(APPLICATION_JSON)
-                .get(testId + "/health")
+                .body(requestDTO)
+                .post("/health")
                 .then()
                 .statusCode(Response.Status.OK.getStatusCode())
                 .extract()
-                .as(ProviderHealthStatusDTO.class);
+                .as(ProviderHealthStatusResponseDTO.class);
 
         Assertions.assertNotNull(response);
-        Assertions.assertEquals(status.getStatus().toString(), response.getStatus().toString());
+        Assertions.assertNotNull(response.getProviderHealthStatuses());
+        Assertions.assertEquals(1, response.getProviderHealthStatuses().size());
+        Assertions.assertEquals(testId, response.getProviderHealthStatuses().get(0).getProviderId());
+        Assertions.assertEquals(status.getStatus().toString(),
+                response.getProviderHealthStatuses().get(0).getStatus().toString());
+    }
+
+    @Test
+    void getProviderHealthStatus_MultiId_200Test() {
+        String firstId = "multi-1";
+        String secondId = "multi-2";
+
+        ProviderHealthStatusRequestDTO requestDTO = new ProviderHealthStatusRequestDTO();
+        requestDTO.setProviders(java.util.List.of(firstId, secondId));
+
+        ProviderHealthStatusInternal firstStatus = new ProviderHealthStatusInternal()
+                .status(ProviderHealthStatusInternal.StatusEnum.HEALTHY);
+        ProviderHealthStatusInternal secondStatus = new ProviderHealthStatusInternal()
+                .status(ProviderHealthStatusInternal.StatusEnum.UNHEALTHY);
+
+        mockServerClient.when(
+                request().withPath("/internal/providers/" + firstId + "/health")
+                        .withMethod(HttpMethod.GET))
+                .withPriority(100)
+                .withId(MOCK_ID)
+                .respond(httpRequest -> response()
+                        .withStatusCode(Response.Status.OK.getStatusCode())
+                        .withContentType(MediaType.APPLICATION_JSON)
+                        .withBody(JsonBody.json(firstStatus)));
+
+        mockServerClient.when(
+                request().withPath("/internal/providers/" + secondId + "/health")
+                        .withMethod(HttpMethod.GET))
+                .withPriority(100)
+                .withId(MOCK_ID_2)
+                .respond(httpRequest -> response()
+                        .withStatusCode(Response.Status.OK.getStatusCode())
+                        .withContentType(MediaType.APPLICATION_JSON)
+                        .withBody(JsonBody.json(secondStatus)));
+
+        var response = given()
+                .when()
+                .auth().oauth2(keycloakTestClient.getAccessToken(ADMIN))
+                .header(APM_HEADER_PARAM, ADMIN)
+                .contentType(APPLICATION_JSON)
+                .body(requestDTO)
+                .post("/health")
+                .then()
+                .statusCode(Response.Status.OK.getStatusCode())
+                .extract()
+                .as(ProviderHealthStatusResponseDTO.class);
+
+        Assertions.assertNotNull(response);
+        Assertions.assertNotNull(response.getProviderHealthStatuses());
+        Assertions.assertEquals(2, response.getProviderHealthStatuses().size());
+        Assertions.assertEquals(firstId, response.getProviderHealthStatuses().get(0).getProviderId());
+        Assertions.assertEquals(secondId, response.getProviderHealthStatuses().get(1).getProviderId());
+        Assertions.assertEquals(firstStatus.getStatus().toString(),
+                response.getProviderHealthStatuses().get(0).getStatus().toString());
+        Assertions.assertEquals(secondStatus.getStatus().toString(),
+                response.getProviderHealthStatuses().get(1).getStatus().toString());
     }
 }
