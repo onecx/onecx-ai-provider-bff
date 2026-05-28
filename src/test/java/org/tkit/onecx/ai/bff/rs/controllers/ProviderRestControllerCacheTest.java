@@ -6,7 +6,6 @@ import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
 import static org.mockserver.verify.VerificationTimes.exactly;
 
-import gen.org.tkit.onecx.ai.management.bff.client.model.ProviderHealthStatusInternal;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.HttpMethod;
@@ -23,6 +22,7 @@ import org.mockserver.model.MediaType;
 import org.tkit.onecx.ai.bff.rs.AbstractTest;
 import org.tkit.onecx.ai.bff.rs.AiProviderConfig;
 
+import gen.org.tkit.onecx.ai.management.bff.client.model.ProviderHealthStatusInternal;
 import gen.org.tkit.onecx.ai.management.bff.rs.internal.model.ProviderHealthStatusRequestDTO;
 import gen.org.tkit.onecx.ai.management.bff.rs.internal.model.ProviderHealthStatusResponseDTO;
 import io.quarkiverse.mockserver.test.InjectMockServerClient;
@@ -149,9 +149,9 @@ class ProviderRestControllerCacheTest extends AbstractTest {
         Assertions.assertEquals(2, firstOutput.getProviderHealthStatuses().size());
         Assertions.assertEquals(firstId, firstOutput.getProviderHealthStatuses().get(0).getProviderId());
         Assertions.assertEquals(secondId, firstOutput.getProviderHealthStatuses().get(1).getProviderId());
-        Assertions.assertEquals(firstStatus,
+        Assertions.assertEquals(firstStatus.getStatus().toString(),
                 firstOutput.getProviderHealthStatuses().get(0).getStatus().toString());
-        Assertions.assertEquals(secondStatus,
+        Assertions.assertEquals(secondStatus.getStatus().toString(),
                 firstOutput.getProviderHealthStatuses().get(1).getStatus().toString());
 
         Assertions.assertNotNull(secondOutput);
@@ -159,9 +159,9 @@ class ProviderRestControllerCacheTest extends AbstractTest {
         Assertions.assertEquals(2, secondOutput.getProviderHealthStatuses().size());
         Assertions.assertEquals(firstId, secondOutput.getProviderHealthStatuses().get(0).getProviderId());
         Assertions.assertEquals(secondId, secondOutput.getProviderHealthStatuses().get(1).getProviderId());
-        Assertions.assertEquals(firstStatus,
+        Assertions.assertEquals(firstStatus.getStatus().toString(),
                 secondOutput.getProviderHealthStatuses().get(0).getStatus().toString());
-        Assertions.assertEquals(secondStatus,
+        Assertions.assertEquals(secondStatus.getStatus().toString(),
                 secondOutput.getProviderHealthStatuses().get(1).getStatus().toString());
 
         mockServerClient.verify(
