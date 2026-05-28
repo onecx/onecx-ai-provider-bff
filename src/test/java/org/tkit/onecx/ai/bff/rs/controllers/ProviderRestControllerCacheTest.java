@@ -6,6 +6,7 @@ import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
 import static org.mockserver.verify.VerificationTimes.exactly;
 
+import gen.org.tkit.onecx.ai.management.bff.client.model.ProviderHealthStatusInternal;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.HttpMethod;
@@ -93,8 +94,10 @@ class ProviderRestControllerCacheTest extends AbstractTest {
         ProviderHealthStatusRequestDTO requestDTO = new ProviderHealthStatusRequestDTO();
         requestDTO.setProviderIds(java.util.List.of(firstId, secondId));
 
-        String firstStatus = "HEALTHY";
-        String secondStatus = "UNHEALTHY";
+        ProviderHealthStatusInternal firstStatus = new ProviderHealthStatusInternal();
+        firstStatus.setStatus(ProviderHealthStatusInternal.StatusEnum.HEALTHY);
+        ProviderHealthStatusInternal secondStatus = new ProviderHealthStatusInternal();
+        secondStatus.setStatus(ProviderHealthStatusInternal.StatusEnum.UNHEALTHY);
 
         // create mock rest endpoint for permission svc
         mockServerClient.when(
@@ -105,7 +108,7 @@ class ProviderRestControllerCacheTest extends AbstractTest {
                 .respond(httpRequest -> response()
                         .withStatusCode(Response.Status.OK.getStatusCode())
                         .withContentType(MediaType.APPLICATION_JSON)
-                        .withBody(JsonBody.json("{\"status\":\"" + firstStatus + "\"}")));
+                        .withBody(JsonBody.json(firstStatus)));
 
         mockServerClient.when(
                 request().withPath("/internal/providers/" + secondId + "/health")
@@ -115,7 +118,7 @@ class ProviderRestControllerCacheTest extends AbstractTest {
                 .respond(httpRequest -> response()
                         .withStatusCode(Response.Status.OK.getStatusCode())
                         .withContentType(MediaType.APPLICATION_JSON)
-                        .withBody(JsonBody.json("{\"status\":\"" + secondStatus + "\"}")));
+                        .withBody(JsonBody.json(secondStatus)));
 
         var firstOutput = given()
                 .when()
