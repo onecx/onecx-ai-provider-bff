@@ -281,7 +281,8 @@ paths:
         permissions:
           models:
             - write
-      tags: [ model ]
+      tags:
+        - model
       description: Create a Model
       operationId: createModel
       requestBody:
@@ -303,79 +304,92 @@ paths:
         permissions:
           models:
             - read
-      tags: [ model ]
+      tags:
+        - model
       description: Get Model by id
       operationId: getModelById
       parameters:
         - name: id
           in: path
           required: true
-          schema: { type: string }
+          schema:
+            type: string
       responses:
         "200":
           description: OK
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/Model' }
+              schema:
+                $ref: '#/components/schemas/Model'
     put:
       x-onecx:
         permissions:
           models:
             - write
-      tags: [ model ]
+      tags:
+        - model
       description: Update a Model
       operationId: updateModelById
       parameters:
         - name: id
           in: path
           required: true
-          schema: { type: string }
+          schema:
+            type: string
       requestBody:
         required: true
         content:
           application/json:
-            schema: { $ref: '#/components/schemas/UpdateModelRequest' }
+            schema:
+              $ref: '#/components/schemas/UpdateModelRequest'
       responses:
         "200":
           description: Model updated successfully
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/Model' }
+              schema:
+                $ref: '#/components/schemas/Model'
     delete:
       x-onecx:
         permissions:
           models:
             - delete
-      tags: [ model ]
+      tags:
+        - model
       description: Delete a Model
       operationId: deleteModelById
       parameters:
         - name: id
           in: path
           required: true
-          schema: { type: string }
+          schema:
+            type: string
       responses:
-        "204": { description: Model deleted }
+        "204":
+          description: Model deleted
   /models/search:
     post:
       x-onecx:
         permissions:
           models:
             - read
-      tags: [ model ]
+      tags:
+        - model
       description: Find Models by Search Criteria
       operationId: findModelByCriteria
       requestBody:
         required: true
         content:
           application/json:
-            schema: { $ref: '#/components/schemas/ModelSearchCriteria' }
+            schema:
+              $ref: '#/components/schemas/ModelSearchCriteria'
       responses:
         "200":
           description: OK
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/ModelPageResult' }
+              schema:
+                $ref: '#/components/schemas/ModelPageResult'
 
   /scaffolds:
     post:
@@ -383,99 +397,115 @@ paths:
         permissions:
           scaffolds:
             - write
-      tags: [ scaffold ]
+      tags:
+        - scaffold
       description: Create a Scaffold
       operationId: createScaffold
       requestBody:
         required: true
         content:
           application/json:
-            schema: { $ref: '#/components/schemas/CreateScaffoldRequest' }
+            schema:
+              $ref: '#/components/schemas/CreateScaffoldRequest'
       responses:
         "201":
           description: Scaffold created successfully
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/Scaffold' }
+              schema:
+                $ref: '#/components/schemas/Scaffold'
   /scaffolds/{id}:
     get:
       x-onecx:
         permissions:
           scaffolds:
             - read
-      tags: [ scaffold ]
+      tags:
+        - scaffold
       description: Get Scaffold by id
       operationId: getScaffoldById
       parameters:
         - name: id
           in: path
           required: true
-          schema: { type: string }
+          schema:
+            type: string
       responses:
         "200":
           description: OK
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/Scaffold' }
+              schema:
+                $ref: '#/components/schemas/Scaffold'
     put:
       x-onecx:
         permissions:
           scaffolds:
             - write
-      tags: [ scaffold ]
+      tags:
+        - scaffold
       description: Update a Scaffold
       operationId: updateScaffoldById
       parameters:
         - name: id
           in: path
           required: true
-          schema: { type: string }
+          schema:
+            type: string
       requestBody:
         required: true
         content:
           application/json:
-            schema: { $ref: '#/components/schemas/UpdateScaffoldRequest' }
+            schema:
+              $ref: '#/components/schemas/UpdateScaffoldRequest'
       responses:
         "200":
           description: Scaffold updated successfully
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/Scaffold' }
+              schema:
+                $ref: '#/components/schemas/Scaffold'
     delete:
       x-onecx:
         permissions:
           scaffolds:
             - delete
-      tags: [ scaffold ]
+      tags:
+        - scaffold
       description: Delete a Scaffold
       operationId: deleteScaffoldById
       parameters:
         - name: id
           in: path
           required: true
-          schema: { type: string }
+          schema:
+            type: string
       responses:
-        "204": { description: Scaffold deleted }
+        "204":
+          description: Scaffold deleted
   /scaffolds/search:
     post:
       x-onecx:
         permissions:
           scaffolds:
             - read
-      tags: [ scaffold ]
+      tags:
+        - scaffold
       description: Find Scaffolds by Search Criteria
       operationId: findScaffoldByCriteria
       requestBody:
         required: true
         content:
           application/json:
-            schema: { $ref: '#/components/schemas/ScaffoldSearchCriteria' }
+            schema:
+              $ref: '#/components/schemas/ScaffoldSearchCriteria'
       responses:
         "200":
           description: OK
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/ScaffoldPageResult' }
+              schema:
+                $ref: '#/components/schemas/ScaffoldPageResult'
 
   /skills:
     post:
@@ -483,99 +513,115 @@ paths:
         permissions:
           skills:
             - write
-      tags: [ skill ]
+      tags:
+        - skill
       description: Create a Skill
       operationId: createSkill
       requestBody:
         required: true
         content:
           application/json:
-            schema: { $ref: '#/components/schemas/CreateSkillRequest' }
+            schema:
+              $ref: '#/components/schemas/CreateSkillRequest'
       responses:
         "201":
           description: Skill created successfully
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/Skill' }
+              schema:
+                $ref: '#/components/schemas/Skill'
   /skills/{id}:
     get:
       x-onecx:
         permissions:
           skills:
             - read
-      tags: [ skill ]
+      tags:
+        - skill
       description: Get Skill by id
       operationId: getSkillById
       parameters:
         - name: id
           in: path
           required: true
-          schema: { type: string }
+          schema:
+            type: string
       responses:
         "200":
           description: OK
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/Skill' }
+              schema:
+                $ref: '#/components/schemas/Skill'
     put:
       x-onecx:
         permissions:
           skills:
             - write
-      tags: [ skill ]
+      tags:
+        - skill
       description: Update a Skill
       operationId: updateSkillById
       parameters:
         - name: id
           in: path
           required: true
-          schema: { type: string }
+          schema:
+            type: string
       requestBody:
         required: true
         content:
           application/json:
-            schema: { $ref: '#/components/schemas/UpdateSkillRequest' }
+            schema:
+              $ref: '#/components/schemas/UpdateSkillRequest'
       responses:
         "200":
           description: Skill updated successfully
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/Skill' }
+              schema:
+                $ref: '#/components/schemas/Skill'
     delete:
       x-onecx:
         permissions:
           skills:
             - delete
-      tags: [ skill ]
+      tags:
+        - skill
       description: Delete a Skill
       operationId: deleteSkillById
       parameters:
         - name: id
           in: path
           required: true
-          schema: { type: string }
+          schema:
+            type: string
       responses:
-        "204": { description: Skill deleted }
+        "204":
+          description: Skill deleted
   /skills/search:
     post:
       x-onecx:
         permissions:
           skills:
             - read
-      tags: [ skill ]
+      tags:
+        - skill
       description: Find Skills by Search Criteria
       operationId: findSkillByCriteria
       requestBody:
         required: true
         content:
           application/json:
-            schema: { $ref: '#/components/schemas/SkillSearchCriteria' }
+            schema:
+              $ref: '#/components/schemas/SkillSearchCriteria'
       responses:
         "200":
           description: OK
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/SkillPageResult' }
+              schema:
+                $ref: '#/components/schemas/SkillPageResult'
 
   /agentGroups:
     post:
@@ -583,99 +629,115 @@ paths:
         permissions:
           agent-groups:
             - write
-      tags: [ agentGroup ]
+      tags:
+        - agentGroup
       description: Create an AgentGroup
       operationId: createAgentGroup
       requestBody:
         required: true
         content:
           application/json:
-            schema: { $ref: '#/components/schemas/CreateAgentGroupRequest' }
+            schema:
+              $ref: '#/components/schemas/CreateAgentGroupRequest'
       responses:
         "201":
           description: AgentGroup created successfully
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/AgentGroup' }
+              schema:
+                $ref: '#/components/schemas/AgentGroup'
   /agentGroups/{id}:
     get:
       x-onecx:
         permissions:
           agent-groups:
             - read
-      tags: [ agentGroup ]
+      tags:
+        - agentGroup
       description: Get AgentGroup by id
       operationId: getAgentGroupById
       parameters:
         - name: id
           in: path
           required: true
-          schema: { type: string }
+          schema:
+            type: string
       responses:
         "200":
           description: OK
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/AgentGroup' }
+              schema:
+                $ref: '#/components/schemas/AgentGroup'
     put:
       x-onecx:
         permissions:
           agent-groups:
             - write
-      tags: [ agentGroup ]
+      tags:
+        - agentGroup
       description: Update an AgentGroup
       operationId: updateAgentGroupById
       parameters:
         - name: id
           in: path
           required: true
-          schema: { type: string }
+          schema:
+            type: string
       requestBody:
         required: true
         content:
           application/json:
-            schema: { $ref: '#/components/schemas/UpdateAgentGroupRequest' }
+            schema:
+              $ref: '#/components/schemas/UpdateAgentGroupRequest'
       responses:
         "200":
           description: AgentGroup updated successfully
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/AgentGroup' }
+              schema:
+                $ref: '#/components/schemas/AgentGroup'
     delete:
       x-onecx:
         permissions:
           agent-groups:
             - delete
-      tags: [ agentGroup ]
+      tags:
+        - agentGroup
       description: Delete an AgentGroup
       operationId: deleteAgentGroupById
       parameters:
         - name: id
           in: path
           required: true
-          schema: { type: string }
+          schema:
+            type: string
       responses:
-        "204": { description: AgentGroup deleted }
+        "204":
+          description: AgentGroup deleted
   /agentGroups/search:
     post:
       x-onecx:
         permissions:
           agent-groups:
             - read
-      tags: [ agentGroup ]
+      tags:
+        - agentGroup
       description: Find AgentGroups by Search Criteria
       operationId: findAgentGroupByCriteria
       requestBody:
         required: true
         content:
           application/json:
-            schema: { $ref: '#/components/schemas/AgentGroupSearchCriteria' }
+            schema:
+              $ref: '#/components/schemas/AgentGroupSearchCriteria'
       responses:
         "200":
           description: OK
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/AgentGroupPageResult' }
+              schema:
+                $ref: '#/components/schemas/AgentGroupPageResult'
 
 
   /externalAgents:
@@ -684,45 +746,52 @@ paths:
         permissions:
           agents:
             - write
-      tags: [ externalAgent ]
+      tags:
+        - externalAgent
       description: Create an ExternalAgent
       operationId: createExternalAgent
       requestBody:
         required: true
         content:
           application/json:
-            schema: { $ref: '#/components/schemas/CreateExternalAgentRequest' }
+            schema:
+              $ref: '#/components/schemas/CreateExternalAgentRequest'
       responses:
         "201":
           description: ExternalAgent created successfully
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/ExternalAgent' }
+              schema:
+                $ref: '#/components/schemas/ExternalAgent'
         "400":
           description: Bad request
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/ProblemDetailResponse' }
+              schema:
+                $ref: '#/components/schemas/ProblemDetailResponse'
   /externalAgents/{id}:
     get:
       x-onecx:
         permissions:
           agents:
             - read
-      tags: [ externalAgent ]
+      tags:
+        - externalAgent
       description: Get ExternalAgent by id
       operationId: getExternalAgentById
       parameters:
         - name: id
           in: path
           required: true
-          schema: { type: string }
+          schema:
+            type: string
       responses:
         "200":
           description: OK
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/ExternalAgent' }
+              schema:
+                $ref: '#/components/schemas/ExternalAgent'
         "404":
           description: Not found
     put:
@@ -730,30 +799,35 @@ paths:
         permissions:
           agents:
             - write
-      tags: [ externalAgent ]
+      tags:
+        - externalAgent
       description: Update an ExternalAgent
       operationId: updateExternalAgentById
       parameters:
         - name: id
           in: path
           required: true
-          schema: { type: string }
+          schema:
+            type: string
       requestBody:
         required: true
         content:
           application/json:
-            schema: { $ref: '#/components/schemas/UpdateExternalAgentRequest' }
+            schema:
+              $ref: '#/components/schemas/UpdateExternalAgentRequest'
       responses:
         "200":
           description: ExternalAgent updated successfully
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/ExternalAgent' }
+              schema:
+                $ref: '#/components/schemas/ExternalAgent'
         "400":
           description: Bad request
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/ProblemDetailResponse' }
+              schema:
+                $ref: '#/components/schemas/ProblemDetailResponse'
         "404":
           description: ExternalAgent not found
     delete:
@@ -761,41 +835,48 @@ paths:
         permissions:
           agents:
             - delete
-      tags: [ externalAgent ]
+      tags:
+        - externalAgent
       description: Delete an ExternalAgent
       operationId: deleteExternalAgentById
       parameters:
         - name: id
           in: path
           required: true
-          schema: { type: string }
+          schema:
+            type: string
       responses:
-        "204": { description: ExternalAgent deleted }
+        "204":
+          description: ExternalAgent deleted
   /externalAgents/search:
     post:
       x-onecx:
         permissions:
           agents:
             - read
-      tags: [ externalAgent ]
+      tags:
+        - externalAgent
       description: Find ExternalAgents by Search Criteria
       operationId: findExternalAgentByCriteria
       requestBody:
         required: true
         content:
           application/json:
-            schema: { $ref: '#/components/schemas/ExternalAgentSearchCriteria' }
+            schema:
+              $ref: '#/components/schemas/ExternalAgentSearchCriteria'
       responses:
         "200":
           description: OK
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/ExternalAgentPageResult' }
+              schema:
+                $ref: '#/components/schemas/ExternalAgentPageResult'
         "400":
           description: Bad request
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/ProblemDetailResponse' }
+              schema:
+                $ref: '#/components/schemas/ProblemDetailResponse'
   /providers:
     post:
       x-onecx:
@@ -982,34 +1063,53 @@ components:
       properties:
         key:
           type: string
-          enum: [ APP_ID ]
+          enum:
+            - APP_ID
         value:
           type: string
     AgentAbstract:
       type: object
       properties:
-        id: { type: string }
-        name: { type: string }
-        description: { type: string }
-        additionalPrompt: { type: string }
-        a2aEnabled: { type: boolean }
-        status: { $ref: '#/components/schemas/AgentStatus' }
+        id:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        additionalPrompt:
+          type: string
+        a2aEnabled:
+          type: boolean
+        status:
+          $ref: '#/components/schemas/AgentStatus'
         filter:
           $ref: '#/components/schemas/AgentFilter'
     Agent:
       type: object
       properties:
-        modificationCount: { format: int32, type: integer }
-        creationDate: { $ref: '#/components/schemas/OffsetDateTime' }
-        creationUser: { type: string }
-        modificationDate: { $ref: '#/components/schemas/OffsetDateTime' }
-        modificationUser: { type: string }
-        id: { type: string }
-        name: { type: string }
-        description: { type: string }
-        additionalPrompt: { type: string }
-        a2aEnabled: { type: boolean }
-        status: { $ref: '#/components/schemas/AgentStatus' }
+        modificationCount:
+          format: int32
+          type: integer
+        creationDate:
+          $ref: '#/components/schemas/OffsetDateTime'
+        creationUser:
+          type: string
+        modificationDate:
+          $ref: '#/components/schemas/OffsetDateTime'
+        modificationUser:
+          type: string
+        id:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        additionalPrompt:
+          type: string
+        a2aEnabled:
+          type: boolean
+        status:
+          $ref: '#/components/schemas/AgentStatus'
         filter:
           $ref: '#/components/schemas/AgentFilter'
         model:
@@ -1026,16 +1126,25 @@ components:
             $ref: '#/components/schemas/AgentGroup'
     CreateAgentRequest:
       type: object
-      required: [ name ]
+      required:
+        - name
       properties:
-        name: { type: string }
-        description: { type: string }
-        additionalPrompt: { type: string }
-        a2aEnabled: { type: boolean }
-        status: { $ref: '#/components/schemas/AgentStatus' }
-        filter: { $ref: '#/components/schemas/AgentFilter' }
-        model: { $ref: '#/components/schemas/Model' }
-        scaffold: { $ref: '#/components/schemas/Scaffold' }
+        name:
+          type: string
+        description:
+          type: string
+        additionalPrompt:
+          type: string
+        a2aEnabled:
+          type: boolean
+        status:
+          $ref: '#/components/schemas/AgentStatus'
+        filter:
+          $ref: '#/components/schemas/AgentFilter'
+        model:
+          $ref: '#/components/schemas/Model'
+        scaffold:
+          $ref: '#/components/schemas/Scaffold'
         tools:
           type: array
           items:
@@ -1046,17 +1155,28 @@ components:
             $ref: '#/components/schemas/AgentGroup'
     UpdateAgentRequest:
       type: object
-      required: [ modificationCount ]
+      required:
+        - modificationCount
       properties:
-        modificationCount: { format: int32, type: integer }
-        name: { type: string }
-        description: { type: string }
-        additionalPrompt: { type: string }
-        a2aEnabled: { type: boolean }
-        status: { $ref: '#/components/schemas/AgentStatus' }
-        filter: { $ref: '#/components/schemas/AgentFilter' }
-        model: { $ref: '#/components/schemas/Model' }
-        scaffold: { $ref: '#/components/schemas/Scaffold' }
+        modificationCount:
+          format: int32
+          type: integer
+        name:
+          type: string
+        description:
+          type: string
+        additionalPrompt:
+          type: string
+        a2aEnabled:
+          type: boolean
+        status:
+          $ref: '#/components/schemas/AgentStatus'
+        filter:
+          $ref: '#/components/schemas/AgentFilter'
+        model:
+          $ref: '#/components/schemas/Model'
+        scaffold:
+          $ref: '#/components/schemas/Scaffold'
         tools:
           type: array
           items:
@@ -1068,19 +1188,38 @@ components:
     AgentSearchCriteria:
       type: object
       properties:
-        id: { type: string }
-        name: { type: string }
-        description: { type: string }
-        status: { $ref: '#/components/schemas/AgentStatus' }
-        pageNumber: { format: int32, default: 0, type: integer }
-        pageSize: { format: int32, default: 10, maximum: 100, type: integer }
+        id:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        status:
+          $ref: '#/components/schemas/AgentStatus'
+        pageNumber:
+          format: int32
+          default: 0
+          type: integer
+        pageSize:
+          format: int32
+          default: 10
+          maximum: 100
+          type: integer
     AgentPageResult:
       type: object
       properties:
-        totalElements: { format: int64, type: integer }
-        number: { format: int32, type: integer }
-        size: { format: int32, type: integer }
-        totalPages: { format: int64, type: integer }
+        totalElements:
+          format: int64
+          type: integer
+        number:
+          format: int32
+          type: integer
+        size:
+          format: int32
+          type: integer
+        totalPages:
+          format: int64
+          type: integer
         stream:
           type: array
           items:
@@ -1089,59 +1228,114 @@ components:
     Tool:
       type: object
       properties:
-        modificationCount: { format: int32, type: integer }
-        creationDate: { $ref: '#/components/schemas/OffsetDateTime' }
-        creationUser: { type: string }
-        modificationDate: { $ref: '#/components/schemas/OffsetDateTime' }
-        modificationUser: { type: string }
-        id: { type: string }
-        name: { type: string }
-        description: { type: string }
-        type: { $ref: '#/components/schemas/ToolType' }
-        source: { type: string, enum: [ TENANT, GLOBAL ] }
-        url: { type: string }
-        apiKey: { type: string }
-        executionPolicy: { $ref: '#/components/schemas/ExecutionPolicy' }
-        authMode: { $ref: '#/components/schemas/AuthMode' }
+        modificationCount:
+          format: int32
+          type: integer
+        creationDate:
+          $ref: '#/components/schemas/OffsetDateTime'
+        creationUser:
+          type: string
+        modificationDate:
+          $ref: '#/components/schemas/OffsetDateTime'
+        modificationUser:
+          type: string
+        id:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        type:
+          $ref: '#/components/schemas/ToolType'
+        source:
+          type: string
+          enum:
+            - TENANT
+            - GLOBAL
+        url:
+          type: string
+        apiKey:
+          type: string
+        executionPolicy:
+          $ref: '#/components/schemas/ExecutionPolicy'
+        authMode:
+          $ref: '#/components/schemas/AuthMode'
     CreateToolRequest:
       type: object
       properties:
-        name: { type: string }
-        description: { type: string }
-        type: { $ref: '#/components/schemas/ToolType' }
-        url: { type: string }
-        apiKey: { type: string }
-        executionPolicy: { $ref: '#/components/schemas/ExecutionPolicy' }
-        authMode: { $ref: '#/components/schemas/AuthMode' }
+        name:
+          type: string
+        description:
+          type: string
+        type:
+          $ref: '#/components/schemas/ToolType'
+        url:
+          type: string
+        apiKey:
+          type: string
+        executionPolicy:
+          $ref: '#/components/schemas/ExecutionPolicy'
+        authMode:
+          $ref: '#/components/schemas/AuthMode'
     UpdateToolRequest:
       type: object
-      required: [ modificationCount ]
+      required:
+        - modificationCount
       properties:
-        modificationCount: { format: int32, type: integer }
-        name: { type: string }
-        description: { type: string }
-        type: { $ref: '#/components/schemas/ToolType' }
-        url: { type: string }
-        apiKey: { type: string }
-        executionPolicy: { $ref: '#/components/schemas/ExecutionPolicy' }
-        authMode: { $ref: '#/components/schemas/AuthMode' }
+        modificationCount:
+          format: int32
+          type: integer
+        name:
+          type: string
+        description:
+          type: string
+        type:
+          $ref: '#/components/schemas/ToolType'
+        url:
+          type: string
+        apiKey:
+          type: string
+        executionPolicy:
+          $ref: '#/components/schemas/ExecutionPolicy'
+        authMode:
+          $ref: '#/components/schemas/AuthMode'
     ToolSearchCriteria:
       type: object
       properties:
-        id: { type: string }
-        name: { type: string }
-        description: { type: string }
-        url: { type: string }
-        type: { $ref: '#/components/schemas/ToolType' }
-        pageNumber: { format: int32, default: 0, type: integer }
-        pageSize: { format: int32, default: 10, maximum: 100, type: integer }
+        id:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        url:
+          type: string
+        type:
+          $ref: '#/components/schemas/ToolType'
+        pageNumber:
+          format: int32
+          default: 0
+          type: integer
+        pageSize:
+          format: int32
+          default: 10
+          maximum: 100
+          type: integer
     ToolPageResult:
       type: object
       properties:
-        totalElements: { format: int64, type: integer }
-        number: { format: int32, type: integer }
-        size: { format: int32, type: integer }
-        totalPages: { format: int64, type: integer }
+        totalElements:
+          format: int64
+          type: integer
+        number:
+          format: int32
+          type: integer
+        size:
+          format: int32
+          type: integer
+        totalPages:
+          format: int64
+          type: integer
         stream:
           type: array
           items:
@@ -1150,50 +1344,93 @@ components:
     Model:
       type: object
       properties:
-        modificationCount: { format: int32, type: integer }
-        creationDate: { $ref: '#/components/schemas/OffsetDateTime' }
-        creationUser: { type: string }
-        modificationDate: { $ref: '#/components/schemas/OffsetDateTime' }
-        modificationUser: { type: string }
-        id: { type: string }
-        name: { type: string }
-        modelIdentifier: { type: string }
-        modelConfig: { type: string }
-        communicationMode: { $ref: '#/components/schemas/CommunicationMode' }
-        provider: { $ref: '#/components/schemas/Provider' }
+        modificationCount:
+          format: int32
+          type: integer
+        creationDate:
+          $ref: '#/components/schemas/OffsetDateTime'
+        creationUser:
+          type: string
+        modificationDate:
+          $ref: '#/components/schemas/OffsetDateTime'
+        modificationUser:
+          type: string
+        id:
+          type: string
+        name:
+          type: string
+        modelIdentifier:
+          type: string
+        modelConfig:
+          type: string
+        communicationMode:
+          $ref: '#/components/schemas/CommunicationMode'
+        provider:
+          $ref: '#/components/schemas/Provider'
     CreateModelRequest:
       type: object
       properties:
-        name: { type: string }
-        modelIdentifier: { type: string }
-        modelConfig: { type: string }
-        communicationMode: { $ref: '#/components/schemas/CommunicationMode' }
-        provider: { $ref: '#/components/schemas/Provider' }
+        name:
+          type: string
+        modelIdentifier:
+          type: string
+        modelConfig:
+          type: string
+        communicationMode:
+          $ref: '#/components/schemas/CommunicationMode'
+        provider:
+          $ref: '#/components/schemas/Provider'
     UpdateModelRequest:
       type: object
-      required: [ modificationCount ]
+      required:
+        - modificationCount
       properties:
-        modificationCount: { format: int32, type: integer }
-        name: { type: string }
-        modelIdentifier: { type: string }
-        modelConfig: { type: string }
-        communicationMode: { $ref: '#/components/schemas/CommunicationMode' }
-        provider: { $ref: '#/components/schemas/Provider' }
+        modificationCount:
+          format: int32
+          type: integer
+        name:
+          type: string
+        modelIdentifier:
+          type: string
+        modelConfig:
+          type: string
+        communicationMode:
+          $ref: '#/components/schemas/CommunicationMode'
+        provider:
+          $ref: '#/components/schemas/Provider'
     ModelSearchCriteria:
       type: object
       properties:
-        providerId: { type: string }
-        name: { type: string }
-        communicationMode: { $ref: '#/components/schemas/CommunicationMode' }
-        pageNumber: { format: int32, default: 0, type: integer }
-        pageSize: { format: int32, default: 10, maximum: 100, type: integer }
+        providerId:
+          type: string
+        name:
+          type: string
+        communicationMode:
+          $ref: '#/components/schemas/CommunicationMode'
+        pageNumber:
+          format: int32
+          default: 0
+          type: integer
+        pageSize:
+          format: int32
+          default: 10
+          maximum: 100
+          type: integer
     ModelPageResult:
       type: object
       properties:
-        totalElements: { format: int64, type: integer }
-        number: { format: int32, type: integer }
-        size: { format: int32, type: integer }
-        totalPages: { format: int64, type: integer }
+        totalElements:
+          format: int64
+          type: integer
+        number:
+          format: int32
+          type: integer
+        size:
+          format: int32
+          type: integer
+        totalPages:
+          format: int64
+          type: integer
         stream:
           type: array
           items:
@@ -1202,16 +1439,30 @@ components:
     Scaffold:
       type: object
       properties:
-        modificationCount: { format: int32, type: integer }
-        creationDate: { $ref: '#/components/schemas/OffsetDateTime' }
-        creationUser: { type: string }
-        modificationDate: { $ref: '#/components/schemas/OffsetDateTime' }
-        modificationUser: { type: string }
-        id: { type: string }
-        name: { type: string }
-        systemPrompt: { type: string }
-        source: { type: string, enum: [ TENANT, GLOBAL ] }
-        sourceProduct: { type: string }
+        modificationCount:
+          format: int32
+          type: integer
+        creationDate:
+          $ref: '#/components/schemas/OffsetDateTime'
+        creationUser:
+          type: string
+        modificationDate:
+          $ref: '#/components/schemas/OffsetDateTime'
+        modificationUser:
+          type: string
+        id:
+          type: string
+        name:
+          type: string
+        systemPrompt:
+          type: string
+        source:
+          type: string
+          enum:
+            - TENANT
+            - GLOBAL
+        sourceProduct:
+          type: string
         skills:
           type: array
           items:
@@ -1219,21 +1470,30 @@ components:
     CreateScaffoldRequest:
       type: object
       properties:
-        name: { type: string }
-        systemPrompt: { type: string }
-        sourceProduct: { type: string }
+        name:
+          type: string
+        systemPrompt:
+          type: string
+        sourceProduct:
+          type: string
         skills:
           type: array
           items:
             $ref: '#/components/schemas/Skill'
     UpdateScaffoldRequest:
       type: object
-      required: [ modificationCount ]
+      required:
+        - modificationCount
       properties:
-        modificationCount: { format: int32, type: integer }
-        name: { type: string }
-        systemPrompt: { type: string }
-        sourceProduct: { type: string }
+        modificationCount:
+          format: int32
+          type: integer
+        name:
+          type: string
+        systemPrompt:
+          type: string
+        sourceProduct:
+          type: string
         skills:
           type: array
           items:
@@ -1241,17 +1501,34 @@ components:
     ScaffoldSearchCriteria:
       type: object
       properties:
-        name: { type: string }
-        sourceProduct: { type: string }
-        pageNumber: { format: int32, default: 0, type: integer }
-        pageSize: { format: int32, default: 10, maximum: 100, type: integer }
+        name:
+          type: string
+        sourceProduct:
+          type: string
+        pageNumber:
+          format: int32
+          default: 0
+          type: integer
+        pageSize:
+          format: int32
+          default: 10
+          maximum: 100
+          type: integer
     ScaffoldPageResult:
       type: object
       properties:
-        totalElements: { format: int64, type: integer }
-        number: { format: int32, type: integer }
-        size: { format: int32, type: integer }
-        totalPages: { format: int64, type: integer }
+        totalElements:
+          format: int64
+          type: integer
+        number:
+          format: int32
+          type: integer
+        size:
+          format: int32
+          type: integer
+        totalPages:
+          format: int64
+          type: integer
         stream:
           type: array
           items:
@@ -1260,43 +1537,82 @@ components:
     Skill:
       type: object
       properties:
-        modificationCount: { format: int32, type: integer }
-        creationDate: { $ref: '#/components/schemas/OffsetDateTime' }
-        creationUser: { type: string }
-        modificationDate: { $ref: '#/components/schemas/OffsetDateTime' }
-        modificationUser: { type: string }
-        id: { type: string }
-        name: { type: string }
-        description: { type: string }
-        instruction: { type: string }
-        source: { type: string, enum: [ TENANT, GLOBAL ] }
+        modificationCount:
+          format: int32
+          type: integer
+        creationDate:
+          $ref: '#/components/schemas/OffsetDateTime'
+        creationUser:
+          type: string
+        modificationDate:
+          $ref: '#/components/schemas/OffsetDateTime'
+        modificationUser:
+          type: string
+        id:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        instruction:
+          type: string
+        source:
+          type: string
+          enum:
+            - TENANT
+            - GLOBAL
     CreateSkillRequest:
       type: object
       properties:
-        name: { type: string }
-        description: { type: string }
-        instruction: { type: string }
+        name:
+          type: string
+        description:
+          type: string
+        instruction:
+          type: string
     UpdateSkillRequest:
       type: object
-      required: [ modificationCount ]
+      required:
+        - modificationCount
       properties:
-        modificationCount: { format: int32, type: integer }
-        name: { type: string }
-        description: { type: string }
-        instruction: { type: string }
+        modificationCount:
+          format: int32
+          type: integer
+        name:
+          type: string
+        description:
+          type: string
+        instruction:
+          type: string
     SkillSearchCriteria:
       type: object
       properties:
-        name: { type: string }
-        pageNumber: { format: int32, default: 0, type: integer }
-        pageSize: { format: int32, default: 10, maximum: 100, type: integer }
+        name:
+          type: string
+        pageNumber:
+          format: int32
+          default: 0
+          type: integer
+        pageSize:
+          format: int32
+          default: 10
+          maximum: 100
+          type: integer
     SkillPageResult:
       type: object
       properties:
-        totalElements: { format: int64, type: integer }
-        number: { format: int32, type: integer }
-        size: { format: int32, type: integer }
-        totalPages: { format: int64, type: integer }
+        totalElements:
+          format: int64
+          type: integer
+        number:
+          format: int32
+          type: integer
+        size:
+          format: int32
+          type: integer
+        totalPages:
+          format: int64
+          type: integer
         stream:
           type: array
           items:
@@ -1305,18 +1621,31 @@ components:
     ExternalAgent:
       type: object
       properties:
-        modificationCount: { format: int32, type: integer }
-        creationDate: { $ref: '#/components/schemas/OffsetDateTime' }
-        creationUser: { type: string }
-        modificationDate: { $ref: '#/components/schemas/OffsetDateTime' }
-        modificationUser: { type: string }
-        id: { type: string }
-        name: { type: string }
-        description: { type: string }
-        discoveryUrl: { type: string }
-        apiKey: { type: string }
-        authMode: { $ref: '#/components/schemas/AuthMode' }
-        enabled: { type: boolean }
+        modificationCount:
+          format: int32
+          type: integer
+        creationDate:
+          $ref: '#/components/schemas/OffsetDateTime'
+        creationUser:
+          type: string
+        modificationDate:
+          $ref: '#/components/schemas/OffsetDateTime'
+        modificationUser:
+          type: string
+        id:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        discoveryUrl:
+          type: string
+        apiKey:
+          type: string
+        authMode:
+          $ref: '#/components/schemas/AuthMode'
+        enabled:
+          type: boolean
         groups:
           type: array
           items:
@@ -1324,27 +1653,42 @@ components:
     CreateExternalAgentRequest:
       type: object
       properties:
-        name: { type: string }
-        description: { type: string }
-        discoveryUrl: { type: string }
-        apiKey: { type: string }
-        authMode: { $ref: '#/components/schemas/AuthMode' }
-        enabled: { type: boolean }
+        name:
+          type: string
+        description:
+          type: string
+        discoveryUrl:
+          type: string
+        apiKey:
+          type: string
+        authMode:
+          $ref: '#/components/schemas/AuthMode'
+        enabled:
+          type: boolean
         groupIds:
           type: array
           items:
             type: string
     UpdateExternalAgentRequest:
       type: object
-      required: [ modificationCount ]
+      required:
+        - modificationCount
       properties:
-        modificationCount: { format: int32, type: integer }
-        name: { type: string }
-        description: { type: string }
-        discoveryUrl: { type: string }
-        apiKey: { type: string }
-        authMode: { $ref: '#/components/schemas/AuthMode' }
-        enabled: { type: boolean }
+        modificationCount:
+          format: int32
+          type: integer
+        name:
+          type: string
+        description:
+          type: string
+        discoveryUrl:
+          type: string
+        apiKey:
+          type: string
+        authMode:
+          $ref: '#/components/schemas/AuthMode'
+        enabled:
+          type: boolean
         groupIds:
           type: array
           items:
@@ -1352,18 +1696,36 @@ components:
     ExternalAgentSearchCriteria:
       type: object
       properties:
-        name: { type: string }
-        description: { type: string }
-        enabled: { type: boolean }
-        pageNumber: { format: int32, default: 0, type: integer }
-        pageSize: { format: int32, default: 10, maximum: 100, type: integer }
+        name:
+          type: string
+        description:
+          type: string
+        enabled:
+          type: boolean
+        pageNumber:
+          format: int32
+          default: 0
+          type: integer
+        pageSize:
+          format: int32
+          default: 10
+          maximum: 100
+          type: integer
     ExternalAgentPageResult:
       type: object
       properties:
-        totalElements: { format: int64, type: integer }
-        number: { format: int32, type: integer }
-        size: { format: int32, type: integer }
-        totalPages: { format: int64, type: integer }
+        totalElements:
+          format: int64
+          type: integer
+        number:
+          format: int32
+          type: integer
+        size:
+          format: int32
+          type: integer
+        totalPages:
+          format: int64
+          type: integer
         stream:
           type: array
           items:
@@ -1371,15 +1733,25 @@ components:
     AgentGroup:
       type: object
       properties:
-        modificationCount: { format: int32, type: integer }
-        creationDate: { $ref: '#/components/schemas/OffsetDateTime' }
-        creationUser: { type: string }
-        modificationDate: { $ref: '#/components/schemas/OffsetDateTime' }
-        modificationUser: { type: string }
-        id: { type: string }
-        name: { type: string }
-        description: { type: string }
-        routingInstructions: { type: string }
+        modificationCount:
+          format: int32
+          type: integer
+        creationDate:
+          $ref: '#/components/schemas/OffsetDateTime'
+        creationUser:
+          type: string
+        modificationDate:
+          $ref: '#/components/schemas/OffsetDateTime'
+        modificationUser:
+          type: string
+        id:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        routingInstructions:
+          type: string
         orchestrationMode:
           $ref: '#/components/schemas/AgentGroupOrchestrationMode'
         responseStrategy:
@@ -1387,21 +1759,30 @@ components:
     CreateAgentGroupRequest:
       type: object
       properties:
-        name: { type: string }
-        description: { type: string }
-        routingInstructions: { type: string }
+        name:
+          type: string
+        description:
+          type: string
+        routingInstructions:
+          type: string
         orchestrationMode:
           $ref: '#/components/schemas/AgentGroupOrchestrationMode'
         responseStrategy:
           $ref: '#/components/schemas/AgentGroupResponseStrategy'
     UpdateAgentGroupRequest:
       type: object
-      required: [ modificationCount ]
+      required:
+        - modificationCount
       properties:
-        modificationCount: { format: int32, type: integer }
-        name: { type: string }
-        description: { type: string }
-        routingInstructions: { type: string }
+        modificationCount:
+          format: int32
+          type: integer
+        name:
+          type: string
+        description:
+          type: string
+        routingInstructions:
+          type: string
         orchestrationMode:
           $ref: '#/components/schemas/AgentGroupOrchestrationMode'
         responseStrategy:
@@ -1409,24 +1790,47 @@ components:
     AgentGroupSearchCriteria:
       type: object
       properties:
-        name: { type: string }
+        name:
+          type: string
         orchestrationMode:
           $ref: '#/components/schemas/AgentGroupOrchestrationMode'
-        pageNumber: { format: int32, default: 0, type: integer }
-        pageSize: { format: int32, default: 10, maximum: 100, type: integer }
+        pageNumber:
+          format: int32
+          default: 0
+          type: integer
+        pageSize:
+          format: int32
+          default: 10
+          maximum: 100
+          type: integer
     AgentGroupOrchestrationMode:
       type: string
-      enum: [ LEAD_DELEGATES, SUPERVISOR_ROUTED, SEQUENTIAL, PARALLEL ]
+      enum:
+        - LEAD_DELEGATES
+        - SUPERVISOR_ROUTED
+        - SEQUENTIAL
+        - PARALLEL
     AgentGroupResponseStrategy:
       type: string
-      enum: [ LAST, SUMMARY, SCORED ]
+      enum:
+        - LAST
+        - SUMMARY
+        - SCORED
     AgentGroupPageResult:
       type: object
       properties:
-        totalElements: { format: int64, type: integer }
-        number: { format: int32, type: integer }
-        size: { format: int32, type: integer }
-        totalPages: { format: int64, type: integer }
+        totalElements:
+          format: int64
+          type: integer
+        number:
+          format: int32
+          type: integer
+        size:
+          format: int32
+          type: integer
+        totalPages:
+          format: int64
+          type: integer
         stream:
           type: array
           items:
