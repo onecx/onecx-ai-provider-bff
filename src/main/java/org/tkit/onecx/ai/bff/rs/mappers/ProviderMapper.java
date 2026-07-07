@@ -21,5 +21,5 @@ public interface ProviderMapper {
     @Mapping(target = "removeStreamItem", ignore = true)
     ProviderPageResultDTO mapPageResult(ProviderPageResultInternal providerPageResult);
 
-    ProviderHealthStatusDTO mapHealthStatus(ProviderHealthStatusInternal healthStatus);
+    ProviderHealthStatusDTO mapHealthStatus(ProviderHealthStatusInternal healthStatus, String providerId);
 }

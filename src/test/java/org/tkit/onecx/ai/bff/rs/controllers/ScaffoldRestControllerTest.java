@@ -19,9 +19,7 @@ import org.mockserver.model.MediaType;
 import org.tkit.onecx.ai.bff.rs.AbstractTest;
 import org.tkit.quarkus.log.cdi.LogService;
 
-// Client model classes (for MockServer responses)
 import gen.org.tkit.onecx.ai.management.bff.client.model.*;
-// BFF API DTOs (for RestAssured requests/responses)
 import gen.org.tkit.onecx.ai.management.bff.rs.internal.model.*;
 import io.quarkiverse.mockserver.test.InjectMockServerClient;
 import io.quarkus.test.common.http.TestHTTPEndpoint;
@@ -30,8 +28,8 @@ import io.quarkus.test.keycloak.client.KeycloakTestClient;
 
 @QuarkusTest
 @LogService
-@TestHTTPEndpoint(ProviderRestController.class)
-class ProviderRestControllerTest extends AbstractTest {
+@TestHTTPEndpoint(ScaffoldRestController.class)
+class ScaffoldRestControllerTest extends AbstractTest {
 
     @InjectMockServerClient
     MockServerClient mockServerClient;
@@ -49,13 +47,14 @@ class ProviderRestControllerTest extends AbstractTest {
     }
 
     @Test
-    void getProviderById_200Test() {
-        ProviderInternal fakeData = new ProviderInternal().name("provider1")
-                .type(ProviderTypeInternal.OLLAMA);
+    void getScaffoldById_200Test() {
+        ScaffoldInternal fakeData = new ScaffoldInternal()
+                .id("1").name("scaffold1").systemPrompt("prompt").sourceProduct("product1")
+                .skills(List.of(new SkillInternal().name("skill1").instruction("do")));
 
         String testId = "1";
         mockServerClient.when(
-                request().withPath("/internal/providers/" + testId)
+                request().withPath("/internal/scaffolds/" + testId)
                         .withMethod(HttpMethod.GET))
                 .withPriority(100)
                 .withId(MOCK_ID)
@@ -73,32 +72,32 @@ class ProviderRestControllerTest extends AbstractTest {
                 .then()
                 .statusCode(Response.Status.OK.getStatusCode())
                 .extract()
-                .as(ProviderDTO.class);
+                .as(ScaffoldDTO.class);
 
         Assertions.assertNotNull(response);
         Assertions.assertEquals(fakeData.getName(), response.getName());
-        Assertions.assertEquals(fakeData.getType().name(), response.getType().name());
+        Assertions.assertEquals("skill1", response.getSkills().get(0).getName());
     }
 
     @Test
-    void searchProviderTest() {
-        ProviderSearchCriteriaInternal requestDTO = new ProviderSearchCriteriaInternal();
-        requestDTO.setName("Provider1");
+    void searchScaffoldTest() {
+        ScaffoldSearchCriteriaInternal internalCriteria = new ScaffoldSearchCriteriaInternal();
+        internalCriteria.setName("scaffold1");
 
-        ProviderSearchCriteriaDTO criteria = new ProviderSearchCriteriaDTO();
-        criteria.setName("Provider1");
+        ScaffoldSearchCriteriaDTO criteria = new ScaffoldSearchCriteriaDTO();
+        criteria.setName("scaffold1");
 
-        ProviderInternal provider1 = new ProviderInternal().name("Provider1").description("desc");
+        ScaffoldInternal scaffold1 = new ScaffoldInternal().id("1").name("scaffold1");
 
-        ProviderPageResultInternal pageResult = new ProviderPageResultInternal();
+        ScaffoldPageResultInternal pageResult = new ScaffoldPageResultInternal();
         pageResult.setNumber(0);
         pageResult.setSize(10);
         pageResult.setTotalPages(1L);
-        pageResult.setStream(List.of(provider1));
+        pageResult.setStream(List.of(scaffold1));
         pageResult.setTotalElements(1L);
 
         mockServerClient.when(
-                request().withPath("/internal/providers/search")
+                request().withPath("/internal/scaffolds/search")
                         .withMethod(HttpMethod.POST)
                         .withBody(JsonBody.json(criteria)))
                 .withId(MOCK_ID)
@@ -112,47 +111,47 @@ class ProviderRestControllerTest extends AbstractTest {
                 .auth().oauth2(keycloakTestClient.getAccessToken(ADMIN))
                 .header(APM_HEADER_PARAM, ADMIN)
                 .contentType(APPLICATION_JSON)
-                .body(requestDTO)
+                .body(internalCriteria)
                 .post("/search")
                 .then()
                 .statusCode(Response.Status.OK.getStatusCode())
                 .extract()
-                .as(ProviderPageResultDTO.class);
+                .as(ScaffoldPageResultDTO.class);
 
         Assertions.assertNotNull(results);
         Assertions.assertEquals(pageResult.getSize(), results.getSize());
-        Assertions.assertEquals(provider1.getName(), results.getStream().get(0).getName());
+        Assertions.assertEquals(scaffold1.getName(), results.getStream().get(0).getName());
     }
 
     @Test
-    void createProviderTest() {
-        CreateProviderRequestInternal createRequest = new CreateProviderRequestInternal();
-        createRequest.setName("New Provider");
-        createRequest.setDescription("desc");
-        createRequest.setLlmUrl("url");
-        createRequest.setApiKey("key");
-        createRequest.setType(ProviderTypeInternal.OLLAMA);
+    void createScaffoldTest() {
+        CreateScaffoldRequestInternal createRequest = new CreateScaffoldRequestInternal();
+        createRequest.setName("New Scaffold");
+        createRequest.setSystemPrompt("prompt");
+        createRequest.setSourceProduct("product1");
+        createRequest.setSkills(List.of(new SkillInternal().name("skill1")));
 
-        ProviderInternal responseProvider = new ProviderInternal();
-        responseProvider.setId("new-id");
-        responseProvider.setName("New Provider");
+        ScaffoldInternal responseScaffold = new ScaffoldInternal();
+        responseScaffold.setId("new-id");
+        responseScaffold.setName("New Scaffold");
 
         mockServerClient.when(
-                request().withPath("/internal/providers")
+                request().withPath("/internal/scaffolds")
                         .withMethod(HttpMethod.POST)
                         .withBody(JsonBody.json(createRequest)))
                 .withId(MOCK_ID)
                 .respond(httpRequest -> response()
                         .withStatusCode(Response.Status.CREATED.getStatusCode())
                         .withContentType(MediaType.APPLICATION_JSON)
-                        .withBody(JsonBody.json(responseProvider)));
+                        .withBody(JsonBody.json(responseScaffold)));
 
-        CreateProviderRequestDTO createDTO = new CreateProviderRequestDTO();
-        createDTO.setName("New Provider");
-        createDTO.setDescription("desc");
-        createDTO.setLlmUrl("url");
-        createDTO.setApiKey("key");
-        createDTO.setType(ProviderTypeDTO.OLLAMA);
+        CreateScaffoldRequestDTO createDTO = new CreateScaffoldRequestDTO();
+        createDTO.setName("New Scaffold");
+        createDTO.setSystemPrompt("prompt");
+        createDTO.setSourceProduct("product1");
+        SkillDTO skillDTO = new SkillDTO();
+        skillDTO.setName("skill1");
+        createDTO.setSkills(List.of(skillDTO));
 
         var response = given()
                 .when()
@@ -164,42 +163,37 @@ class ProviderRestControllerTest extends AbstractTest {
                 .then()
                 .statusCode(Response.Status.CREATED.getStatusCode())
                 .extract()
-                .as(ProviderDTO.class);
+                .as(ScaffoldDTO.class);
 
         Assertions.assertNotNull(response);
-        Assertions.assertEquals(responseProvider.getName(), response.getName());
+        Assertions.assertEquals(responseScaffold.getName(), response.getName());
     }
 
     @Test
-    void updateProviderTest() {
-
-        UpdateProviderRequestInternal updateRequest = new UpdateProviderRequestInternal();
-        updateRequest.setName("Updated Provider");
-        updateRequest.setDescription("desc");
-        updateRequest.setLlmUrl("url");
-        updateRequest.setApiKey("key");
+    void updateScaffoldTest() {
+        UpdateScaffoldRequestInternal updateRequest = new UpdateScaffoldRequestInternal();
+        updateRequest.setName("Updated Scaffold");
+        updateRequest.setSystemPrompt("prompt");
         updateRequest.setModificationCount(0);
 
-        ProviderInternal responseProvider = new ProviderInternal();
-        responseProvider.setId("1");
-        responseProvider.setName("Updated Provider");
+        ScaffoldInternal responseScaffold = new ScaffoldInternal();
+        responseScaffold.setId("1");
+        responseScaffold.setName("Updated Scaffold");
 
         String testId = "1";
         mockServerClient.when(
-                request().withPath("/internal/providers/" + testId)
+                request().withPath("/internal/scaffolds/" + testId)
                         .withMethod(HttpMethod.PUT)
                         .withBody(JsonBody.json(updateRequest)))
                 .withId(MOCK_ID)
                 .respond(httpRequest -> response()
                         .withStatusCode(Response.Status.OK.getStatusCode())
                         .withContentType(MediaType.APPLICATION_JSON)
-                        .withBody(JsonBody.json(responseProvider)));
+                        .withBody(JsonBody.json(responseScaffold)));
 
-        UpdateProviderRequestDTO updateDTO = new UpdateProviderRequestDTO();
-        updateDTO.setName("Updated Provider");
-        updateDTO.setDescription("desc");
-        updateDTO.setLlmUrl("url");
-        updateDTO.setApiKey("key");
+        UpdateScaffoldRequestDTO updateDTO = new UpdateScaffoldRequestDTO();
+        updateDTO.setName("Updated Scaffold");
+        updateDTO.setSystemPrompt("prompt");
         updateDTO.setModificationCount(0);
 
         var response = given()
@@ -212,20 +206,16 @@ class ProviderRestControllerTest extends AbstractTest {
                 .then()
                 .statusCode(Response.Status.OK.getStatusCode())
                 .extract()
-                .as(ProviderDTO.class);
+                .as(ScaffoldDTO.class);
 
         Assertions.assertNotNull(response);
-        Assertions.assertEquals(responseProvider.getName(), response.getName());
+        Assertions.assertEquals(responseScaffold.getName(), response.getName());
     }
 
     @Test
-    void updateProviderTest_400_ConstraintException() {
-
-        UpdateProviderRequestDTO updateDTO = new UpdateProviderRequestDTO();
-        updateDTO.setName("Updated Provider");
-        updateDTO.setDescription("desc");
-        updateDTO.setLlmUrl("url");
-        updateDTO.setApiKey("key");
+    void updateScaffoldTest_400_ConstraintException() {
+        UpdateScaffoldRequestDTO updateDTO = new UpdateScaffoldRequestDTO();
+        updateDTO.setName("Updated Scaffold");
 
         given()
                 .when()
@@ -239,10 +229,10 @@ class ProviderRestControllerTest extends AbstractTest {
     }
 
     @Test
-    void deleteProviderTest() {
+    void deleteScaffoldTest() {
         String testId = "1";
         mockServerClient.when(
-                request().withPath("/internal/providers/" + testId)
+                request().withPath("/internal/scaffolds/" + testId)
                         .withMethod(HttpMethod.DELETE))
                 .withId(MOCK_ID)
                 .respond(httpRequest -> response()
@@ -259,10 +249,10 @@ class ProviderRestControllerTest extends AbstractTest {
     }
 
     @Test
-    void deleteProvider_ClientException_Test() {
+    void deleteScaffold_ClientException_Test() {
         String testId = "1";
         mockServerClient.when(
-                request().withPath("/internal/providers/" + testId)
+                request().withPath("/internal/scaffolds/" + testId)
                         .withMethod(HttpMethod.DELETE))
                 .withId(MOCK_ID)
                 .respond(httpRequest -> response()
@@ -276,43 +266,5 @@ class ProviderRestControllerTest extends AbstractTest {
                 .delete(testId)
                 .then()
                 .statusCode(Response.Status.BAD_REQUEST.getStatusCode());
-    }
-
-    @Test
-    void getProviderHealthStatusesByIds_200Test() {
-        ProviderHealthStatusInternal status = new ProviderHealthStatusInternal()
-                .status(ProviderHealthStatusInternal.StatusEnum.HEALTHY);
-
-        String testId = "1";
-        mockServerClient.when(
-                request().withPath("/internal/providers/" + testId + "/health")
-                        .withMethod(HttpMethod.GET))
-                .withPriority(100)
-                .withId(MOCK_ID)
-                .respond(httpRequest -> response()
-                        .withStatusCode(Response.Status.OK.getStatusCode())
-                        .withContentType(MediaType.APPLICATION_JSON)
-                        .withBody(JsonBody.json(status)));
-
-        ProviderHealthStatusRequestDTO requestDTO = new ProviderHealthStatusRequestDTO();
-        requestDTO.setProviderIds(List.of(testId));
-
-        var response = given()
-                .when()
-                .auth().oauth2(keycloakTestClient.getAccessToken(ADMIN))
-                .header(APM_HEADER_PARAM, ADMIN)
-                .contentType(APPLICATION_JSON)
-                .body(requestDTO)
-                .post("/health")
-                .then()
-                .statusCode(Response.Status.OK.getStatusCode())
-                .extract()
-                .as(ProviderHealthStatusResponseDTO.class);
-
-        Assertions.assertNotNull(response);
-        Assertions.assertEquals(1, response.getProviderHealthStatuses().size());
-        Assertions.assertEquals(testId, response.getProviderHealthStatuses().get(0).getProviderId());
-        Assertions.assertEquals(status.getStatus().toString(),
-                response.getProviderHealthStatuses().get(0).getStatus().toString());
     }
 }

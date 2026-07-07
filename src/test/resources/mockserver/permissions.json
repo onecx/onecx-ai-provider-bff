@@ -15,9 +15,13 @@
         "json": {
           "appId": "onecx-ai-provider-bff",
           "permissions": {
-            "configuration": ["read", "write", "delete"],
-            "provider": ["read", "write", "delete"],
-            "mcpServer": ["read", "write", "delete"],
+            "providers": ["read", "write", "delete"],
+            "agents": ["read", "write", "delete"],
+            "tools": ["read", "write", "delete"],
+            "models": ["read", "write", "delete"],
+            "scaffolds": ["read", "write", "delete"],
+            "skills": ["read", "write", "delete"],
+            "agent-groups": ["read", "write", "delete"],
             "permissions": [
               "admin-write",
               "admin-read"
@@ -44,9 +48,13 @@
         "json": {
           "appId": "onecx-ai-provider-bff",
           "permissions": {
-            "configuration": ["read"],
-            "provider": ["read"],
-            "mcpServer": ["read"],
+            "providers": ["read"],
+            "agents": ["read"],
+            "tools": ["read"],
+            "models": ["read"],
+            "scaffolds": ["read"],
+            "skills": ["read"],
+            "agent-groups": ["read"],
             "permissions": [
               "admin-write",
               "admin-read"

@@ -5,6 +5,8 @@ import static jakarta.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
 
+import java.util.List;
+
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.HttpMethod;
@@ -22,7 +24,8 @@ import org.tkit.onecx.ai.bff.rs.AbstractTest;
 import org.tkit.onecx.ai.bff.rs.AiProviderConfig;
 
 import gen.org.tkit.onecx.ai.management.bff.client.model.ProviderHealthStatusInternal;
-import gen.org.tkit.onecx.ai.management.bff.rs.internal.model.ProviderHealthStatusDTO;
+import gen.org.tkit.onecx.ai.management.bff.rs.internal.model.ProviderHealthStatusRequestDTO;
+import gen.org.tkit.onecx.ai.management.bff.rs.internal.model.ProviderHealthStatusResponseDTO;
 import io.quarkiverse.mockserver.test.InjectMockServerClient;
 import io.quarkus.test.InjectMock;
 import io.quarkus.test.Mock;
@@ -106,14 +109,18 @@ class ProviderRestControllerCacheTest extends AbstractTest {
                 .when()
                 .auth().oauth2(keycloakTestClient.getAccessToken(ADMIN))
                 .header(APM_HEADER_PARAM, ADMIN)
-                .get(testId + "/health")
+                .contentType(APPLICATION_JSON)
+                .body(new ProviderHealthStatusRequestDTO().providerIds(List.of(testId)))
+                .post("/health")
                 .then()
                 .statusCode(Response.Status.OK.getStatusCode())
                 .contentType(APPLICATION_JSON)
-                .extract().as(ProviderHealthStatusDTO.class);
+                .extract().as(ProviderHealthStatusResponseDTO.class);
 
         Assertions.assertNotNull(output);
-        Assertions.assertEquals(status.getStatus().toString(), output.getStatus().toString());
+        Assertions.assertEquals(1, output.getProviderHealthStatuses().size());
+        Assertions.assertEquals(status.getStatus().toString(),
+                output.getProviderHealthStatuses().get(0).getStatus().toString());
         mockServerClient.clear("mockHealthCheck");
     }
 }
