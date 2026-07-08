@@ -19,9 +19,7 @@ import org.mockserver.model.MediaType;
 import org.tkit.onecx.ai.bff.rs.AbstractTest;
 import org.tkit.quarkus.log.cdi.LogService;
 
-// Client model classes (for MockServer responses)
 import gen.org.tkit.onecx.ai.management.bff.client.model.*;
-// BFF API DTOs (for RestAssured requests/responses)
 import gen.org.tkit.onecx.ai.management.bff.rs.internal.model.*;
 import io.quarkiverse.mockserver.test.InjectMockServerClient;
 import io.quarkus.test.common.http.TestHTTPEndpoint;
@@ -30,8 +28,8 @@ import io.quarkus.test.keycloak.client.KeycloakTestClient;
 
 @QuarkusTest
 @LogService
-@TestHTTPEndpoint(ProviderRestController.class)
-class ProviderRestControllerTest extends AbstractTest {
+@TestHTTPEndpoint(AgentGroupRestController.class)
+class AgentGroupRestControllerTest extends AbstractTest {
 
     @InjectMockServerClient
     MockServerClient mockServerClient;
@@ -49,13 +47,15 @@ class ProviderRestControllerTest extends AbstractTest {
     }
 
     @Test
-    void getProviderById_200Test() {
-        ProviderInternal fakeData = new ProviderInternal().name("provider1")
-                .type(ProviderTypeInternal.OLLAMA);
+    void getAgentGroupById_200Test() {
+        AgentGroupInternal fakeData = new AgentGroupInternal()
+                .id("1").name("group1").description("desc").routingInstructions("route")
+                .orchestrationMode(AgentGroupOrchestrationModeInternal.SEQUENTIAL)
+                .responseStrategy(AgentGroupResponseStrategyInternal.LAST);
 
         String testId = "1";
         mockServerClient.when(
-                request().withPath("/internal/providers/" + testId)
+                request().withPath("/internal/agentGroups/" + testId)
                         .withMethod(HttpMethod.GET))
                 .withPriority(100)
                 .withId(MOCK_ID)
@@ -73,32 +73,34 @@ class ProviderRestControllerTest extends AbstractTest {
                 .then()
                 .statusCode(Response.Status.OK.getStatusCode())
                 .extract()
-                .as(ProviderDTO.class);
+                .as(AgentGroupDTO.class);
 
         Assertions.assertNotNull(response);
         Assertions.assertEquals(fakeData.getName(), response.getName());
-        Assertions.assertEquals(fakeData.getType().name(), response.getType().name());
+        Assertions.assertEquals(fakeData.getOrchestrationMode().name(), response.getOrchestrationMode().name());
+        Assertions.assertEquals(fakeData.getResponseStrategy().name(), response.getResponseStrategy().name());
     }
 
     @Test
-    void searchProviderTest() {
-        ProviderSearchCriteriaInternal requestDTO = new ProviderSearchCriteriaInternal();
-        requestDTO.setName("Provider1");
+    void searchAgentGroupTest() {
+        AgentGroupSearchCriteriaInternal internalCriteria = new AgentGroupSearchCriteriaInternal();
+        internalCriteria.setName("group1");
 
-        ProviderSearchCriteriaDTO criteria = new ProviderSearchCriteriaDTO();
-        criteria.setName("Provider1");
+        AgentGroupSearchCriteriaDTO criteria = new AgentGroupSearchCriteriaDTO();
+        criteria.setName("group1");
 
-        ProviderInternal provider1 = new ProviderInternal().name("Provider1").description("desc");
+        AgentGroupInternal group1 = new AgentGroupInternal().id("1").name("group1")
+                .orchestrationMode(AgentGroupOrchestrationModeInternal.PARALLEL);
 
-        ProviderPageResultInternal pageResult = new ProviderPageResultInternal();
+        AgentGroupPageResultInternal pageResult = new AgentGroupPageResultInternal();
         pageResult.setNumber(0);
         pageResult.setSize(10);
         pageResult.setTotalPages(1L);
-        pageResult.setStream(List.of(provider1));
+        pageResult.setStream(List.of(group1));
         pageResult.setTotalElements(1L);
 
         mockServerClient.when(
-                request().withPath("/internal/providers/search")
+                request().withPath("/internal/agentGroups/search")
                         .withMethod(HttpMethod.POST)
                         .withBody(JsonBody.json(criteria)))
                 .withId(MOCK_ID)
@@ -112,47 +114,47 @@ class ProviderRestControllerTest extends AbstractTest {
                 .auth().oauth2(keycloakTestClient.getAccessToken(ADMIN))
                 .header(APM_HEADER_PARAM, ADMIN)
                 .contentType(APPLICATION_JSON)
-                .body(requestDTO)
+                .body(internalCriteria)
                 .post("/search")
                 .then()
                 .statusCode(Response.Status.OK.getStatusCode())
                 .extract()
-                .as(ProviderPageResultDTO.class);
+                .as(AgentGroupPageResultDTO.class);
 
         Assertions.assertNotNull(results);
         Assertions.assertEquals(pageResult.getSize(), results.getSize());
-        Assertions.assertEquals(provider1.getName(), results.getStream().get(0).getName());
+        Assertions.assertEquals(group1.getName(), results.getStream().get(0).getName());
     }
 
     @Test
-    void createProviderTest() {
-        CreateProviderRequestInternal createRequest = new CreateProviderRequestInternal();
-        createRequest.setName("New Provider");
+    void createAgentGroupTest() {
+        CreateAgentGroupRequestInternal createRequest = new CreateAgentGroupRequestInternal();
+        createRequest.setName("New Group");
         createRequest.setDescription("desc");
-        createRequest.setLlmUrl("url");
-        createRequest.setApiKey("key");
-        createRequest.setType(ProviderTypeInternal.OLLAMA);
+        createRequest.setRoutingInstructions("route");
+        createRequest.setOrchestrationMode(AgentGroupOrchestrationModeInternal.LEAD_DELEGATES);
+        createRequest.setResponseStrategy(AgentGroupResponseStrategyInternal.SUMMARY);
 
-        ProviderInternal responseProvider = new ProviderInternal();
-        responseProvider.setId("new-id");
-        responseProvider.setName("New Provider");
+        AgentGroupInternal responseGroup = new AgentGroupInternal();
+        responseGroup.setId("new-id");
+        responseGroup.setName("New Group");
 
         mockServerClient.when(
-                request().withPath("/internal/providers")
+                request().withPath("/internal/agentGroups")
                         .withMethod(HttpMethod.POST)
                         .withBody(JsonBody.json(createRequest)))
                 .withId(MOCK_ID)
                 .respond(httpRequest -> response()
                         .withStatusCode(Response.Status.CREATED.getStatusCode())
                         .withContentType(MediaType.APPLICATION_JSON)
-                        .withBody(JsonBody.json(responseProvider)));
+                        .withBody(JsonBody.json(responseGroup)));
 
-        CreateProviderRequestDTO createDTO = new CreateProviderRequestDTO();
-        createDTO.setName("New Provider");
+        CreateAgentGroupRequestDTO createDTO = new CreateAgentGroupRequestDTO();
+        createDTO.setName("New Group");
         createDTO.setDescription("desc");
-        createDTO.setLlmUrl("url");
-        createDTO.setApiKey("key");
-        createDTO.setType(ProviderTypeDTO.OLLAMA);
+        createDTO.setRoutingInstructions("route");
+        createDTO.setOrchestrationMode(AgentGroupOrchestrationModeDTO.LEAD_DELEGATES);
+        createDTO.setResponseStrategy(AgentGroupResponseStrategyDTO.SUMMARY);
 
         var response = given()
                 .when()
@@ -164,42 +166,37 @@ class ProviderRestControllerTest extends AbstractTest {
                 .then()
                 .statusCode(Response.Status.CREATED.getStatusCode())
                 .extract()
-                .as(ProviderDTO.class);
+                .as(AgentGroupDTO.class);
 
         Assertions.assertNotNull(response);
-        Assertions.assertEquals(responseProvider.getName(), response.getName());
+        Assertions.assertEquals(responseGroup.getName(), response.getName());
     }
 
     @Test
-    void updateProviderTest() {
-
-        UpdateProviderRequestInternal updateRequest = new UpdateProviderRequestInternal();
-        updateRequest.setName("Updated Provider");
-        updateRequest.setDescription("desc");
-        updateRequest.setLlmUrl("url");
-        updateRequest.setApiKey("key");
+    void updateAgentGroupTest() {
+        UpdateAgentGroupRequestInternal updateRequest = new UpdateAgentGroupRequestInternal();
+        updateRequest.setName("Updated Group");
+        updateRequest.setOrchestrationMode(AgentGroupOrchestrationModeInternal.SUPERVISOR_ROUTED);
         updateRequest.setModificationCount(0);
 
-        ProviderInternal responseProvider = new ProviderInternal();
-        responseProvider.setId("1");
-        responseProvider.setName("Updated Provider");
+        AgentGroupInternal responseGroup = new AgentGroupInternal();
+        responseGroup.setId("1");
+        responseGroup.setName("Updated Group");
 
         String testId = "1";
         mockServerClient.when(
-                request().withPath("/internal/providers/" + testId)
+                request().withPath("/internal/agentGroups/" + testId)
                         .withMethod(HttpMethod.PUT)
                         .withBody(JsonBody.json(updateRequest)))
                 .withId(MOCK_ID)
                 .respond(httpRequest -> response()
                         .withStatusCode(Response.Status.OK.getStatusCode())
                         .withContentType(MediaType.APPLICATION_JSON)
-                        .withBody(JsonBody.json(responseProvider)));
+                        .withBody(JsonBody.json(responseGroup)));
 
-        UpdateProviderRequestDTO updateDTO = new UpdateProviderRequestDTO();
-        updateDTO.setName("Updated Provider");
-        updateDTO.setDescription("desc");
-        updateDTO.setLlmUrl("url");
-        updateDTO.setApiKey("key");
+        UpdateAgentGroupRequestDTO updateDTO = new UpdateAgentGroupRequestDTO();
+        updateDTO.setName("Updated Group");
+        updateDTO.setOrchestrationMode(AgentGroupOrchestrationModeDTO.SUPERVISOR_ROUTED);
         updateDTO.setModificationCount(0);
 
         var response = given()
@@ -212,20 +209,16 @@ class ProviderRestControllerTest extends AbstractTest {
                 .then()
                 .statusCode(Response.Status.OK.getStatusCode())
                 .extract()
-                .as(ProviderDTO.class);
+                .as(AgentGroupDTO.class);
 
         Assertions.assertNotNull(response);
-        Assertions.assertEquals(responseProvider.getName(), response.getName());
+        Assertions.assertEquals(responseGroup.getName(), response.getName());
     }
 
     @Test
-    void updateProviderTest_400_ConstraintException() {
-
-        UpdateProviderRequestDTO updateDTO = new UpdateProviderRequestDTO();
-        updateDTO.setName("Updated Provider");
-        updateDTO.setDescription("desc");
-        updateDTO.setLlmUrl("url");
-        updateDTO.setApiKey("key");
+    void updateAgentGroupTest_400_ConstraintException() {
+        UpdateAgentGroupRequestDTO updateDTO = new UpdateAgentGroupRequestDTO();
+        updateDTO.setName("Updated Group");
 
         given()
                 .when()
@@ -239,10 +232,10 @@ class ProviderRestControllerTest extends AbstractTest {
     }
 
     @Test
-    void deleteProviderTest() {
+    void deleteAgentGroupTest() {
         String testId = "1";
         mockServerClient.when(
-                request().withPath("/internal/providers/" + testId)
+                request().withPath("/internal/agentGroups/" + testId)
                         .withMethod(HttpMethod.DELETE))
                 .withId(MOCK_ID)
                 .respond(httpRequest -> response()
@@ -259,10 +252,10 @@ class ProviderRestControllerTest extends AbstractTest {
     }
 
     @Test
-    void deleteProvider_ClientException_Test() {
+    void deleteAgentGroup_ClientException_Test() {
         String testId = "1";
         mockServerClient.when(
-                request().withPath("/internal/providers/" + testId)
+                request().withPath("/internal/agentGroups/" + testId)
                         .withMethod(HttpMethod.DELETE))
                 .withId(MOCK_ID)
                 .respond(httpRequest -> response()
@@ -276,43 +269,5 @@ class ProviderRestControllerTest extends AbstractTest {
                 .delete(testId)
                 .then()
                 .statusCode(Response.Status.BAD_REQUEST.getStatusCode());
-    }
-
-    @Test
-    void getProviderHealthStatusesByIds_200Test() {
-        ProviderHealthStatusInternal status = new ProviderHealthStatusInternal()
-                .status(ProviderHealthStatusInternal.StatusEnum.HEALTHY);
-
-        String testId = "1";
-        mockServerClient.when(
-                request().withPath("/internal/providers/" + testId + "/health")
-                        .withMethod(HttpMethod.GET))
-                .withPriority(100)
-                .withId(MOCK_ID)
-                .respond(httpRequest -> response()
-                        .withStatusCode(Response.Status.OK.getStatusCode())
-                        .withContentType(MediaType.APPLICATION_JSON)
-                        .withBody(JsonBody.json(status)));
-
-        ProviderHealthStatusRequestDTO requestDTO = new ProviderHealthStatusRequestDTO();
-        requestDTO.setProviderIds(List.of(testId));
-
-        var response = given()
-                .when()
-                .auth().oauth2(keycloakTestClient.getAccessToken(ADMIN))
-                .header(APM_HEADER_PARAM, ADMIN)
-                .contentType(APPLICATION_JSON)
-                .body(requestDTO)
-                .post("/health")
-                .then()
-                .statusCode(Response.Status.OK.getStatusCode())
-                .extract()
-                .as(ProviderHealthStatusResponseDTO.class);
-
-        Assertions.assertNotNull(response);
-        Assertions.assertEquals(1, response.getProviderHealthStatuses().size());
-        Assertions.assertEquals(testId, response.getProviderHealthStatuses().get(0).getProviderId());
-        Assertions.assertEquals(status.getStatus().toString(),
-                response.getProviderHealthStatuses().get(0).getStatus().toString());
     }
 }

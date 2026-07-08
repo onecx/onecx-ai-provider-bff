@@ -3,5 +3,5 @@ package org.tkit.onecx.ai.bff.rs.controllers;
 import io.quarkus.test.junit.QuarkusIntegrationTest;
 
 @QuarkusIntegrationTest
-public class ConfigurationControllerTestIT extends ConfigurationControllerTest {
+class ExternalAgentRestControllerTestIT extends ExternalAgentRestControllerTest {
 }
