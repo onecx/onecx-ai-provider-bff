@@ -89,9 +89,9 @@ class ExternalAgentRestControllerTest extends AbstractTest {
         ExternalAgentSearchCriteriaDTO criteria = new ExternalAgentSearchCriteriaDTO();
         criteria.setName("ext1");
 
-        ExternalAgentInternal ext1 = new ExternalAgentInternal().id("1").name("ext1").enabled(true);
+        ExternalAgentAbstractDTO ext1 = new ExternalAgentAbstractDTO().id("1").name("ext1").enabled(true);
 
-        ExternalAgentPageResultInternal pageResult = new ExternalAgentPageResultInternal();
+        ExternalAgentPageResultDTO pageResult = new ExternalAgentPageResultDTO();
         pageResult.setNumber(0);
         pageResult.setSize(10);
         pageResult.setTotalPages(1L);
