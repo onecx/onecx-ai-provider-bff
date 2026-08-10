@@ -75,6 +75,60 @@ public class ToolRestController implements ToolApiService {
         }
     }
 
+    @Override
+    public Response getDiscoveredTools(String toolId) {
+        try (Response response = toolInternalApi.getDiscoveredTools(toolId)) {
+            if (response.getStatus() != Response.Status.OK.getStatusCode()) {
+                return Response.status(response.getStatus()).build();
+            }
+            var discovered = response.readEntity(DiscoveredToolInfoListInternal.class);
+            return Response.ok(toolMapper.mapDiscovered(discovered)).build();
+        }
+    }
+
+    @Override
+    public Response getMcpToolRules(String toolId) {
+        try (Response response = toolInternalApi.getMcpToolRules(toolId)) {
+            if (response.getStatus() != Response.Status.OK.getStatusCode()) {
+                return Response.status(response.getStatus()).build();
+            }
+            var rules = response.readEntity(McpToolRuleListInternal.class);
+            return Response.ok(toolMapper.mapRules(rules)).build();
+        }
+    }
+
+    @Override
+    public Response createMcpToolRule(String toolId, CreateMcpToolRuleRequestDTO createMcpToolRuleRequestDTO) {
+        var request = toolMapper.mapCreateRule(createMcpToolRuleRequestDTO);
+        try (Response response = toolInternalApi.createMcpToolRule(toolId, request)) {
+            if (response.getStatus() != Response.Status.CREATED.getStatusCode()) {
+                return Response.status(response.getStatus()).build();
+            }
+            var rule = response.readEntity(McpToolRuleInternal.class);
+            return Response.status(Response.Status.CREATED).entity(toolMapper.map(rule)).build();
+        }
+    }
+
+    @Override
+    public Response updateMcpToolRule(String toolId, String ruleId,
+            UpdateMcpToolRuleRequestDTO updateMcpToolRuleRequestDTO) {
+        var request = toolMapper.mapUpdateRule(updateMcpToolRuleRequestDTO);
+        try (Response response = toolInternalApi.updateMcpToolRule(toolId, ruleId, request)) {
+            if (response.getStatus() != Response.Status.OK.getStatusCode()) {
+                return Response.status(response.getStatus()).build();
+            }
+            var rule = response.readEntity(McpToolRuleInternal.class);
+            return Response.ok(toolMapper.map(rule)).build();
+        }
+    }
+
+    @Override
+    public Response deleteMcpToolRule(String toolId, String ruleId) {
+        try (Response response = toolInternalApi.deleteMcpToolRule(toolId, ruleId)) {
+            return Response.status(response.getStatus()).build();
+        }
+    }
+
     @ServerExceptionMapper
     public Response restException(ClientWebApplicationException ex) {
         return exceptionMapper.clientException(ex);

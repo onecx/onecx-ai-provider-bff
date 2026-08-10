@@ -14,6 +14,7 @@ tags:
   - name: skill
   - name: agentGroup
   - name: externalAgent
+  - name: dangerPattern
 paths:
   /agents:
     post:
@@ -274,6 +275,238 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ToolPageResult'
+
+  /tools/{toolId}/discovered-tools:
+    post:
+      x-onecx:
+        permissions:
+          tools:
+            - read
+      tags:
+        - tool
+      description: Discover tools exposed by the MCP server of a Tool, joined with existing rules and danger classification
+      operationId: getDiscoveredTools
+      parameters:
+        - name: toolId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DiscoveredToolInfoList'
+        "404":
+          description: Tool not found
+
+  /tools/{toolId}/mcp-tool-rules:
+    get:
+      x-onecx:
+        permissions:
+          tools:
+            - read
+      tags:
+        - tool
+      description: Get MCP tool rules for a Tool
+      operationId: getMcpToolRules
+      parameters:
+        - name: toolId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/McpToolRuleList'
+    post:
+      x-onecx:
+        permissions:
+          tools:
+            - write
+      tags:
+        - tool
+      description: Create an MCP tool rule for a Tool
+      operationId: createMcpToolRule
+      parameters:
+        - name: toolId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateMcpToolRuleRequest'
+      responses:
+        "201":
+          description: Rule created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/McpToolRule'
+
+  /tools/{toolId}/mcp-tool-rules/{ruleId}:
+    put:
+      x-onecx:
+        permissions:
+          tools:
+            - write
+      tags:
+        - tool
+      description: Update an MCP tool rule
+      operationId: updateMcpToolRule
+      parameters:
+        - name: toolId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: ruleId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateMcpToolRuleRequest'
+      responses:
+        "200":
+          description: Rule updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/McpToolRule'
+        "404":
+          description: Rule not found
+    delete:
+      x-onecx:
+        permissions:
+          tools:
+            - delete
+      tags:
+        - tool
+      description: Delete an MCP tool rule
+      operationId: deleteMcpToolRule
+      parameters:
+        - name: toolId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: ruleId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Rule deleted
+        "404":
+          description: Rule not found
+
+  /danger-patterns:
+    get:
+      x-onecx:
+        permissions:
+          tools:
+            - read
+      tags:
+        - dangerPattern
+      description: List danger classification patterns
+      operationId: getDangerPatterns
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DangerPatternList'
+    post:
+      x-onecx:
+        permissions:
+          tools:
+            - write
+      tags:
+        - dangerPattern
+      description: Create a danger classification pattern
+      operationId: createDangerPattern
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateDangerPatternRequest'
+      responses:
+        "201":
+          description: Pattern created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DangerPattern'
+
+  /danger-patterns/{id}:
+    put:
+      x-onecx:
+        permissions:
+          tools:
+            - write
+      tags:
+        - dangerPattern
+      description: Update a danger classification pattern
+      operationId: updateDangerPattern
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateDangerPatternRequest'
+      responses:
+        "200":
+          description: Pattern updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DangerPattern'
+        "404":
+          description: Pattern not found
+    delete:
+      x-onecx:
+        permissions:
+          tools:
+            - delete
+      tags:
+        - dangerPattern
+      description: Delete a danger classification pattern
+      operationId: deleteDangerPattern
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Pattern deleted
+        "404":
+          description: Pattern not found
 
   /models:
     post:
@@ -1973,6 +2206,146 @@ components:
       enum:
         - ALWAYS_ASK
         - NEVER_ASK
+    ToolPermission:
+      type: string
+      enum:
+        - ALLOW
+        - DENY
+    DangerLevel:
+      type: string
+      enum:
+        - SAFE
+        - WARNING
+        - DANGEROUS
+    McpToolRule:
+      type: object
+      properties:
+        id:
+          type: string
+        modificationCount:
+          type: integer
+        toolName:
+          type: string
+        toolDescription:
+          type: string
+        allowed:
+          $ref: '#/components/schemas/ToolPermission'
+        dangerLevel:
+          $ref: '#/components/schemas/DangerLevel'
+        autoDangerLevel:
+          $ref: '#/components/schemas/DangerLevel'
+    McpToolRuleList:
+      type: object
+      properties:
+        rules:
+          type: array
+          items:
+            $ref: '#/components/schemas/McpToolRule'
+    CreateMcpToolRuleRequest:
+      type: object
+      required:
+        - toolName
+        - allowed
+      properties:
+        toolName:
+          type: string
+        toolDescription:
+          type: string
+        allowed:
+          $ref: '#/components/schemas/ToolPermission'
+        dangerLevel:
+          $ref: '#/components/schemas/DangerLevel'
+        autoDangerLevel:
+          $ref: '#/components/schemas/DangerLevel'
+    UpdateMcpToolRuleRequest:
+      type: object
+      required:
+        - modificationCount
+      properties:
+        modificationCount:
+          type: integer
+        allowed:
+          $ref: '#/components/schemas/ToolPermission'
+        dangerLevel:
+          $ref: '#/components/schemas/DangerLevel'
+    DangerPattern:
+      type: object
+      properties:
+        id:
+          type: string
+        modificationCount:
+          type: integer
+        pattern:
+          type: string
+        dangerLevel:
+          $ref: '#/components/schemas/DangerLevel'
+        description:
+          type: string
+    DangerPatternList:
+      type: object
+      properties:
+        patterns:
+          type: array
+          items:
+            $ref: '#/components/schemas/DangerPattern'
+    CreateDangerPatternRequest:
+      type: object
+      required:
+        - pattern
+        - dangerLevel
+      properties:
+        pattern:
+          type: string
+        dangerLevel:
+          $ref: '#/components/schemas/DangerLevel'
+        description:
+          type: string
+    UpdateDangerPatternRequest:
+      type: object
+      required:
+          - modificationCount
+      properties:
+        modificationCount:
+          type: integer
+        pattern:
+          type: string
+        dangerLevel:
+          $ref: '#/components/schemas/DangerLevel'
+        description:
+          type: string
+    DiscoveredToolAnnotations:
+      type: object
+      properties:
+        readOnlyHint:
+          type: boolean
+        destructiveHint:
+          type: boolean
+        idempotentHint:
+          type: boolean
+        openWorldHint:
+          type: boolean
+    DiscoveredToolInfo:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        annotations:
+          $ref: '#/components/schemas/DiscoveredToolAnnotations'
+        autoDangerLevel:
+          $ref: '#/components/schemas/DangerLevel'
+        existingRule:
+          $ref: '#/components/schemas/McpToolRule'
+        orphaned:
+          type: boolean
+    DiscoveredToolInfoList:
+      type: object
+      properties:
+        tools:
+          type: array
+          items:
+            $ref: '#/components/schemas/DiscoveredToolInfo'
     ProviderType:
       type: string
       enum:

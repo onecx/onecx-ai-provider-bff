@@ -47,6 +47,190 @@ class ToolRestControllerTest extends AbstractTest {
     }
 
     @Test
+    void getMcpToolRules_200Test() {
+        McpToolRuleInternal rule = new McpToolRuleInternal()
+                .id("r1").toolName("getProposal").allowed(ToolPermissionInternal.ALLOW)
+                .dangerLevel(DangerLevelInternal.SAFE);
+        McpToolRuleListInternal rules = new McpToolRuleListInternal();
+        rules.setRules(List.of(rule));
+
+        String toolId = "t1";
+        mockServerClient.when(
+                request().withPath("/internal/tools/" + toolId + "/mcp-tool-rules")
+                        .withMethod(HttpMethod.GET))
+                .withPriority(100)
+                .withId(MOCK_ID)
+                .respond(httpRequest -> response()
+                        .withStatusCode(Response.Status.OK.getStatusCode())
+                        .withContentType(MediaType.APPLICATION_JSON)
+                        .withBody(JsonBody.json(rules)));
+
+        var response = given()
+                .when()
+                .auth().oauth2(keycloakTestClient.getAccessToken(ADMIN))
+                .header(APM_HEADER_PARAM, ADMIN)
+                .contentType(APPLICATION_JSON)
+                .get(toolId + "/mcp-tool-rules")
+                .then()
+                .statusCode(Response.Status.OK.getStatusCode())
+                .extract()
+                .as(McpToolRuleListDTO.class);
+
+        Assertions.assertNotNull(response);
+        Assertions.assertEquals(1, response.getRules().size());
+        Assertions.assertEquals("getProposal", response.getRules().get(0).getToolName());
+        Assertions.assertEquals(rule.getAllowed().name(), response.getRules().get(0).getAllowed().name());
+        Assertions.assertEquals(rule.getDangerLevel().name(), response.getRules().get(0).getDangerLevel().name());
+    }
+
+    @Test
+    void createMcpToolRule_201Test() {
+        McpToolRuleInternal created = new McpToolRuleInternal()
+                .id("r1").toolName("deleteProposal").allowed(ToolPermissionInternal.DENY)
+                .dangerLevel(DangerLevelInternal.DANGEROUS);
+
+        String toolId = "t1";
+        mockServerClient.when(
+                request().withPath("/internal/tools/" + toolId + "/mcp-tool-rules")
+                        .withMethod(HttpMethod.POST))
+                .withPriority(100)
+                .withId(MOCK_ID)
+                .respond(httpRequest -> response()
+                        .withStatusCode(Response.Status.CREATED.getStatusCode())
+                        .withContentType(MediaType.APPLICATION_JSON)
+                        .withBody(JsonBody.json(created)));
+
+        CreateMcpToolRuleRequestDTO request = new CreateMcpToolRuleRequestDTO();
+        request.setToolName("deleteProposal");
+        request.setAllowed(ToolPermissionDTO.DENY);
+        request.setDangerLevel(DangerLevelDTO.DANGEROUS);
+
+        var response = given()
+                .when()
+                .auth().oauth2(keycloakTestClient.getAccessToken(ADMIN))
+                .header(APM_HEADER_PARAM, ADMIN)
+                .contentType(APPLICATION_JSON)
+                .body(request)
+                .post(toolId + "/mcp-tool-rules")
+                .then()
+                .statusCode(Response.Status.CREATED.getStatusCode())
+                .extract()
+                .as(McpToolRuleDTO.class);
+
+        Assertions.assertNotNull(response);
+        Assertions.assertEquals("r1", response.getId());
+        Assertions.assertEquals(created.getAllowed().name(), response.getAllowed().name());
+    }
+
+    @Test
+    void updateMcpToolRule_404Test() {
+        String toolId = "t1";
+        String ruleId = "missing";
+        mockServerClient.when(
+                request().withPath("/internal/tools/" + toolId + "/mcp-tool-rules/" + ruleId)
+                        .withMethod(HttpMethod.PUT))
+                .withPriority(100)
+                .withId(MOCK_ID)
+                .respond(httpRequest -> response()
+                        .withStatusCode(Response.Status.NOT_FOUND.getStatusCode()));
+
+        UpdateMcpToolRuleRequestDTO request = new UpdateMcpToolRuleRequestDTO();
+        request.setModificationCount(0);
+        request.setAllowed(ToolPermissionDTO.ALLOW);
+
+        given()
+                .when()
+                .auth().oauth2(keycloakTestClient.getAccessToken(ADMIN))
+                .header(APM_HEADER_PARAM, ADMIN)
+                .contentType(APPLICATION_JSON)
+                .body(request)
+                .put(toolId + "/mcp-tool-rules/" + ruleId)
+                .then()
+                .statusCode(Response.Status.NOT_FOUND.getStatusCode());
+    }
+
+    @Test
+    void deleteMcpToolRule_204Test() {
+        String toolId = "t1";
+        String ruleId = "r1";
+        mockServerClient.when(
+                request().withPath("/internal/tools/" + toolId + "/mcp-tool-rules/" + ruleId)
+                        .withMethod(HttpMethod.DELETE))
+                .withPriority(100)
+                .withId(MOCK_ID)
+                .respond(httpRequest -> response()
+                        .withStatusCode(Response.Status.NO_CONTENT.getStatusCode()));
+
+        given()
+                .when()
+                .auth().oauth2(keycloakTestClient.getAccessToken(ADMIN))
+                .header(APM_HEADER_PARAM, ADMIN)
+                .contentType(APPLICATION_JSON)
+                .delete(toolId + "/mcp-tool-rules/" + ruleId)
+                .then()
+                .statusCode(Response.Status.NO_CONTENT.getStatusCode());
+    }
+
+    @Test
+    void getDiscoveredTools_200Test() {
+        DiscoveredToolInfoInternal info = new DiscoveredToolInfoInternal()
+                .name("importProposals")
+                .description("Imports proposals")
+                .autoDangerLevel(DangerLevelInternal.WARNING)
+                .orphaned(false);
+        DiscoveredToolInfoListInternal discovered = new DiscoveredToolInfoListInternal();
+        discovered.setTools(List.of(info));
+
+        String toolId = "t1";
+        mockServerClient.when(
+                request().withPath("/internal/tools/" + toolId + "/discovered-tools")
+                        .withMethod(HttpMethod.POST))
+                .withPriority(100)
+                .withId(MOCK_ID)
+                .respond(httpRequest -> response()
+                        .withStatusCode(Response.Status.OK.getStatusCode())
+                        .withContentType(MediaType.APPLICATION_JSON)
+                        .withBody(JsonBody.json(discovered)));
+
+        var response = given()
+                .when()
+                .auth().oauth2(keycloakTestClient.getAccessToken(ADMIN))
+                .header(APM_HEADER_PARAM, ADMIN)
+                .contentType(APPLICATION_JSON)
+                .post(toolId + "/discovered-tools")
+                .then()
+                .statusCode(Response.Status.OK.getStatusCode())
+                .extract()
+                .as(DiscoveredToolInfoListDTO.class);
+
+        Assertions.assertNotNull(response);
+        Assertions.assertEquals(1, response.getTools().size());
+        Assertions.assertEquals("importProposals", response.getTools().get(0).getName());
+        Assertions.assertEquals(info.getAutoDangerLevel().name(), response.getTools().get(0).getAutoDangerLevel().name());
+    }
+
+    @Test
+    void getDiscoveredTools_404Test() {
+        String toolId = "missing";
+        mockServerClient.when(
+                request().withPath("/internal/tools/" + toolId + "/discovered-tools")
+                        .withMethod(HttpMethod.POST))
+                .withPriority(100)
+                .withId(MOCK_ID)
+                .respond(httpRequest -> response()
+                        .withStatusCode(Response.Status.NOT_FOUND.getStatusCode()));
+
+        given()
+                .when()
+                .auth().oauth2(keycloakTestClient.getAccessToken(ADMIN))
+                .header(APM_HEADER_PARAM, ADMIN)
+                .contentType(APPLICATION_JSON)
+                .post(toolId + "/discovered-tools")
+                .then()
+                .statusCode(Response.Status.NOT_FOUND.getStatusCode());
+    }
+
+    @Test
     void getToolById_200Test() {
         ToolInternal fakeData = new ToolInternal()
                 .id("1").name("tool1").description("desc").type(ToolTypeInternal.MCP)

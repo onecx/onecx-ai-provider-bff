@@ -20,4 +20,25 @@ public interface ToolMapper {
 
     @Mapping(target = "removeStreamItem", ignore = true)
     ToolPageResultDTO mapPageResult(ToolPageResultInternal toolPageResult);
+
+    McpToolRuleDTO map(McpToolRuleInternal rule);
+
+    @Mapping(target = "removeRulesItem", ignore = true)
+    McpToolRuleListDTO mapRules(McpToolRuleListInternal rules);
+
+    CreateMcpToolRuleRequestInternal mapCreateRule(CreateMcpToolRuleRequestDTO dto);
+
+    UpdateMcpToolRuleRequestInternal mapUpdateRule(UpdateMcpToolRuleRequestDTO dto);
+
+    @Mapping(target = "removeToolsItem", ignore = true)
+    DiscoveredToolInfoListDTO mapDiscovered(DiscoveredToolInfoListInternal discovered);
+
+    DangerPatternDTO map(DangerPatternInternal pattern);
+
+    @Mapping(target = "removePatternsItem", ignore = true)
+    DangerPatternListDTO mapPatterns(DangerPatternListInternal patterns);
+
+    CreateDangerPatternRequestInternal mapCreatePattern(CreateDangerPatternRequestDTO dto);
+
+    UpdateDangerPatternRequestInternal mapUpdatePattern(UpdateDangerPatternRequestDTO dto);
 }
