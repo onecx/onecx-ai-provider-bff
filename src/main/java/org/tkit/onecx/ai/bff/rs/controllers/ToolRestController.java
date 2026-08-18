@@ -76,8 +76,8 @@ public class ToolRestController implements ToolApiService {
     }
 
     @Override
-    public Response getDiscoveredTools(String toolId) {
-        try (Response response = toolInternalApi.getDiscoveredTools(toolId)) {
+    public Response getDiscoveredTools(String toolId, String agentId) {
+        try (Response response = toolInternalApi.getDiscoveredTools(toolId, agentId)) {
             if (response.getStatus() != Response.Status.OK.getStatusCode()) {
                 return Response.status(response.getStatus()).build();
             }
@@ -87,44 +87,45 @@ public class ToolRestController implements ToolApiService {
     }
 
     @Override
-    public Response getMcpToolRules(String toolId) {
-        try (Response response = toolInternalApi.getMcpToolRules(toolId)) {
+    public Response getAgentMcpToolRules(String agentId, String toolId) {
+        try (Response response = toolInternalApi.getAgentMcpToolRules(agentId, toolId)) {
             if (response.getStatus() != Response.Status.OK.getStatusCode()) {
                 return Response.status(response.getStatus()).build();
             }
-            var rules = response.readEntity(McpToolRuleListInternal.class);
-            return Response.ok(toolMapper.mapRules(rules)).build();
+            var rules = response.readEntity(AgentMcpToolRuleListInternal.class);
+            return Response.ok(toolMapper.mapAgentRules(rules)).build();
         }
     }
 
     @Override
-    public Response createMcpToolRule(String toolId, CreateMcpToolRuleRequestDTO createMcpToolRuleRequestDTO) {
-        var request = toolMapper.mapCreateRule(createMcpToolRuleRequestDTO);
-        try (Response response = toolInternalApi.createMcpToolRule(toolId, request)) {
+    public Response createAgentMcpToolRule(String agentId, String toolId,
+            CreateAgentMcpToolRuleRequestDTO createAgentMcpToolRuleRequestDTO) {
+        var request = toolMapper.mapCreateAgentRule(createAgentMcpToolRuleRequestDTO);
+        try (Response response = toolInternalApi.createAgentMcpToolRule(agentId, toolId, request)) {
             if (response.getStatus() != Response.Status.CREATED.getStatusCode()) {
                 return Response.status(response.getStatus()).build();
             }
-            var rule = response.readEntity(McpToolRuleInternal.class);
-            return Response.status(Response.Status.CREATED).entity(toolMapper.map(rule)).build();
+            var rule = response.readEntity(AgentMcpToolRuleInternal.class);
+            return Response.status(Response.Status.CREATED).entity(toolMapper.mapAgentRule(rule)).build();
         }
     }
 
     @Override
-    public Response updateMcpToolRule(String toolId, String ruleId,
-            UpdateMcpToolRuleRequestDTO updateMcpToolRuleRequestDTO) {
-        var request = toolMapper.mapUpdateRule(updateMcpToolRuleRequestDTO);
-        try (Response response = toolInternalApi.updateMcpToolRule(toolId, ruleId, request)) {
+    public Response updateAgentMcpToolRule(String agentId, String toolId, String ruleId,
+            UpdateAgentMcpToolRuleRequestDTO updateAgentMcpToolRuleRequestDTO) {
+        var request = toolMapper.mapUpdateAgentRule(updateAgentMcpToolRuleRequestDTO);
+        try (Response response = toolInternalApi.updateAgentMcpToolRule(agentId, toolId, ruleId, request)) {
             if (response.getStatus() != Response.Status.OK.getStatusCode()) {
                 return Response.status(response.getStatus()).build();
             }
-            var rule = response.readEntity(McpToolRuleInternal.class);
-            return Response.ok(toolMapper.map(rule)).build();
+            var rule = response.readEntity(AgentMcpToolRuleInternal.class);
+            return Response.ok(toolMapper.mapAgentRule(rule)).build();
         }
     }
 
     @Override
-    public Response deleteMcpToolRule(String toolId, String ruleId) {
-        try (Response response = toolInternalApi.deleteMcpToolRule(toolId, ruleId)) {
+    public Response deleteAgentMcpToolRule(String agentId, String toolId, String ruleId) {
+        try (Response response = toolInternalApi.deleteAgentMcpToolRule(agentId, toolId, ruleId)) {
             return Response.status(response.getStatus()).build();
         }
     }

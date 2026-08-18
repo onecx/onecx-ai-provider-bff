@@ -168,20 +168,21 @@
                 </configuration>
             </plugin>
             <plugin>
-                <groupId>com.googlecode.maven-download-plugin</groupId>
-                <artifactId>download-maven-plugin</artifactId>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-antrun-plugin</artifactId>
                 <executions>
                     <execution>
                         <id>ai-svc-internal</id>
                         <phase>generate-resources</phase>
                         <goals>
-                            <goal>wget</goal>
+                            <goal>run</goal>
                         </goals>
                         <configuration>
-                            <uri>https://raw.githubusercontent.com/onecx/onecx-ai-provider-svc/refs/heads/feat/agent-tools-validation/src/main/openapi/onecx-ai-internal.yaml</uri>
-                            <outputDirectory>target/tmp/openapi</outputDirectory>
-                            <outputFileName>ai-management-svc-internal.yaml</outputFileName>
-                            <skipCache>true</skipCache>
+                            <target>
+                                <copy file="${project.basedir}/../onecx-ai-provider-svc/src/main/openapi/onecx-ai-internal.yaml"
+                                      tofile="${project.build.directory}/tmp/openapi/ai-management-svc-internal.yaml"
+                                      failonerror="true"/>
+                            </target>
                         </configuration>
                     </execution>
                 </executions>

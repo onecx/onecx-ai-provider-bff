@@ -47,16 +47,16 @@ class ToolRestControllerTest extends AbstractTest {
     }
 
     @Test
-    void getMcpToolRules_200Test() {
-        McpToolRuleInternal rule = new McpToolRuleInternal()
-                .id("r1").toolName("getProposal").allowed(ToolPermissionInternal.ALLOW)
-                .dangerLevel(DangerLevelInternal.SAFE);
-        McpToolRuleListInternal rules = new McpToolRuleListInternal();
+    void getAgentMcpToolRules_200Test() {
+        AgentMcpToolRuleInternal rule = new AgentMcpToolRuleInternal()
+                .id("r1").toolName("getProposal").allowed(ToolPermissionInternal.ALLOW);
+        AgentMcpToolRuleListInternal rules = new AgentMcpToolRuleListInternal();
         rules.setRules(List.of(rule));
 
+        String agentId = "a1";
         String toolId = "t1";
         mockServerClient.when(
-                request().withPath("/internal/tools/" + toolId + "/mcp-tool-rules")
+                request().withPath("/internal/agents/" + agentId + "/tools/" + toolId + "/mcp-tool-rules")
                         .withMethod(HttpMethod.GET))
                 .withPriority(100)
                 .withId(MOCK_ID)
@@ -70,28 +70,27 @@ class ToolRestControllerTest extends AbstractTest {
                 .auth().oauth2(keycloakTestClient.getAccessToken(ADMIN))
                 .header(APM_HEADER_PARAM, ADMIN)
                 .contentType(APPLICATION_JSON)
-                .get(toolId + "/mcp-tool-rules")
+                .get("agents/" + agentId + "/tools/" + toolId + "/mcp-tool-rules")
                 .then()
                 .statusCode(Response.Status.OK.getStatusCode())
                 .extract()
-                .as(McpToolRuleListDTO.class);
+                .as(AgentMcpToolRuleListDTO.class);
 
         Assertions.assertNotNull(response);
         Assertions.assertEquals(1, response.getRules().size());
         Assertions.assertEquals("getProposal", response.getRules().get(0).getToolName());
         Assertions.assertEquals(rule.getAllowed().name(), response.getRules().get(0).getAllowed().name());
-        Assertions.assertEquals(rule.getDangerLevel().name(), response.getRules().get(0).getDangerLevel().name());
     }
 
     @Test
-    void createMcpToolRule_201Test() {
-        McpToolRuleInternal created = new McpToolRuleInternal()
-                .id("r1").toolName("deleteProposal").allowed(ToolPermissionInternal.DENY)
-                .dangerLevel(DangerLevelInternal.DANGEROUS);
+    void createAgentMcpToolRule_201Test() {
+        AgentMcpToolRuleInternal created = new AgentMcpToolRuleInternal()
+                .id("r1").toolName("deleteProposal").allowed(ToolPermissionInternal.DENY);
 
+        String agentId = "a1";
         String toolId = "t1";
         mockServerClient.when(
-                request().withPath("/internal/tools/" + toolId + "/mcp-tool-rules")
+                request().withPath("/internal/agents/" + agentId + "/tools/" + toolId + "/mcp-tool-rules")
                         .withMethod(HttpMethod.POST))
                 .withPriority(100)
                 .withId(MOCK_ID)
@@ -100,10 +99,9 @@ class ToolRestControllerTest extends AbstractTest {
                         .withContentType(MediaType.APPLICATION_JSON)
                         .withBody(JsonBody.json(created)));
 
-        CreateMcpToolRuleRequestDTO request = new CreateMcpToolRuleRequestDTO();
+        CreateAgentMcpToolRuleRequestDTO request = new CreateAgentMcpToolRuleRequestDTO();
         request.setToolName("deleteProposal");
         request.setAllowed(ToolPermissionDTO.DENY);
-        request.setDangerLevel(DangerLevelDTO.DANGEROUS);
 
         var response = given()
                 .when()
@@ -111,11 +109,11 @@ class ToolRestControllerTest extends AbstractTest {
                 .header(APM_HEADER_PARAM, ADMIN)
                 .contentType(APPLICATION_JSON)
                 .body(request)
-                .post(toolId + "/mcp-tool-rules")
+                .post("agents/" + agentId + "/tools/" + toolId + "/mcp-tool-rules")
                 .then()
                 .statusCode(Response.Status.CREATED.getStatusCode())
                 .extract()
-                .as(McpToolRuleDTO.class);
+                .as(AgentMcpToolRuleDTO.class);
 
         Assertions.assertNotNull(response);
         Assertions.assertEquals("r1", response.getId());
@@ -123,18 +121,19 @@ class ToolRestControllerTest extends AbstractTest {
     }
 
     @Test
-    void updateMcpToolRule_404Test() {
+    void updateAgentMcpToolRule_404Test() {
+        String agentId = "a1";
         String toolId = "t1";
         String ruleId = "missing";
         mockServerClient.when(
-                request().withPath("/internal/tools/" + toolId + "/mcp-tool-rules/" + ruleId)
+                request().withPath("/internal/agents/" + agentId + "/tools/" + toolId + "/mcp-tool-rules/" + ruleId)
                         .withMethod(HttpMethod.PUT))
                 .withPriority(100)
                 .withId(MOCK_ID)
                 .respond(httpRequest -> response()
                         .withStatusCode(Response.Status.NOT_FOUND.getStatusCode()));
 
-        UpdateMcpToolRuleRequestDTO request = new UpdateMcpToolRuleRequestDTO();
+        UpdateAgentMcpToolRuleRequestDTO request = new UpdateAgentMcpToolRuleRequestDTO();
         request.setModificationCount(0);
         request.setAllowed(ToolPermissionDTO.ALLOW);
 
@@ -144,17 +143,18 @@ class ToolRestControllerTest extends AbstractTest {
                 .header(APM_HEADER_PARAM, ADMIN)
                 .contentType(APPLICATION_JSON)
                 .body(request)
-                .put(toolId + "/mcp-tool-rules/" + ruleId)
+                .put("agents/" + agentId + "/tools/" + toolId + "/mcp-tool-rules/" + ruleId)
                 .then()
                 .statusCode(Response.Status.NOT_FOUND.getStatusCode());
     }
 
     @Test
-    void deleteMcpToolRule_204Test() {
+    void deleteAgentMcpToolRule_204Test() {
+        String agentId = "a1";
         String toolId = "t1";
         String ruleId = "r1";
         mockServerClient.when(
-                request().withPath("/internal/tools/" + toolId + "/mcp-tool-rules/" + ruleId)
+                request().withPath("/internal/agents/" + agentId + "/tools/" + toolId + "/mcp-tool-rules/" + ruleId)
                         .withMethod(HttpMethod.DELETE))
                 .withPriority(100)
                 .withId(MOCK_ID)
@@ -166,7 +166,7 @@ class ToolRestControllerTest extends AbstractTest {
                 .auth().oauth2(keycloakTestClient.getAccessToken(ADMIN))
                 .header(APM_HEADER_PARAM, ADMIN)
                 .contentType(APPLICATION_JSON)
-                .delete(toolId + "/mcp-tool-rules/" + ruleId)
+                .delete("agents/" + agentId + "/tools/" + toolId + "/mcp-tool-rules/" + ruleId)
                 .then()
                 .statusCode(Response.Status.NO_CONTENT.getStatusCode());
     }
@@ -197,7 +197,7 @@ class ToolRestControllerTest extends AbstractTest {
                 .auth().oauth2(keycloakTestClient.getAccessToken(ADMIN))
                 .header(APM_HEADER_PARAM, ADMIN)
                 .contentType(APPLICATION_JSON)
-                .post(toolId + "/discovered-tools")
+                .post("/tools/" + toolId + "/discovered-tools")
                 .then()
                 .statusCode(Response.Status.OK.getStatusCode())
                 .extract()
@@ -225,7 +225,7 @@ class ToolRestControllerTest extends AbstractTest {
                 .auth().oauth2(keycloakTestClient.getAccessToken(ADMIN))
                 .header(APM_HEADER_PARAM, ADMIN)
                 .contentType(APPLICATION_JSON)
-                .post(toolId + "/discovered-tools")
+                .post("/tools/" + toolId + "/discovered-tools")
                 .then()
                 .statusCode(Response.Status.NOT_FOUND.getStatusCode());
     }
@@ -253,7 +253,7 @@ class ToolRestControllerTest extends AbstractTest {
                 .auth().oauth2(keycloakTestClient.getAccessToken(ADMIN))
                 .header(APM_HEADER_PARAM, ADMIN)
                 .contentType(APPLICATION_JSON)
-                .get(testId)
+                .get("/tools/" + testId)
                 .then()
                 .statusCode(Response.Status.OK.getStatusCode())
                 .extract()
@@ -299,7 +299,7 @@ class ToolRestControllerTest extends AbstractTest {
                 .header(APM_HEADER_PARAM, ADMIN)
                 .contentType(APPLICATION_JSON)
                 .body(internalCriteria)
-                .post("/search")
+                .post("/tools/search")
                 .then()
                 .statusCode(Response.Status.OK.getStatusCode())
                 .extract()
@@ -350,7 +350,7 @@ class ToolRestControllerTest extends AbstractTest {
                 .header(APM_HEADER_PARAM, ADMIN)
                 .contentType(APPLICATION_JSON)
                 .body(createDTO)
-                .post()
+                .post("/tools")
                 .then()
                 .statusCode(Response.Status.CREATED.getStatusCode())
                 .extract()
@@ -393,7 +393,7 @@ class ToolRestControllerTest extends AbstractTest {
                 .header(APM_HEADER_PARAM, ADMIN)
                 .contentType(APPLICATION_JSON)
                 .body(updateDTO)
-                .put(testId)
+                .put("/tools/" + testId)
                 .then()
                 .statusCode(Response.Status.OK.getStatusCode())
                 .extract()
@@ -414,7 +414,7 @@ class ToolRestControllerTest extends AbstractTest {
                 .header(APM_HEADER_PARAM, ADMIN)
                 .contentType(APPLICATION_JSON)
                 .body(updateDTO)
-                .put("1")
+                .put("/tools/1")
                 .then()
                 .statusCode(Response.Status.BAD_REQUEST.getStatusCode());
     }
@@ -434,7 +434,7 @@ class ToolRestControllerTest extends AbstractTest {
                 .auth().oauth2(keycloakTestClient.getAccessToken(ADMIN))
                 .header(APM_HEADER_PARAM, ADMIN)
                 .contentType(APPLICATION_JSON)
-                .delete(testId)
+                .delete("/tools/" + testId)
                 .then()
                 .statusCode(Response.Status.NO_CONTENT.getStatusCode());
     }
@@ -454,7 +454,7 @@ class ToolRestControllerTest extends AbstractTest {
                 .auth().oauth2(keycloakTestClient.getAccessToken(ADMIN))
                 .header(APM_HEADER_PARAM, ADMIN)
                 .contentType(APPLICATION_JSON)
-                .delete(testId)
+                .delete("/tools/" + testId)
                 .then()
                 .statusCode(Response.Status.BAD_REQUEST.getStatusCode());
     }

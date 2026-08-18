@@ -21,14 +21,14 @@ public interface ToolMapper {
     @Mapping(target = "removeStreamItem", ignore = true)
     ToolPageResultDTO mapPageResult(ToolPageResultInternal toolPageResult);
 
-    McpToolRuleDTO map(McpToolRuleInternal rule);
+    AgentMcpToolRuleDTO mapAgentRule(AgentMcpToolRuleInternal rule);
 
     @Mapping(target = "removeRulesItem", ignore = true)
-    McpToolRuleListDTO mapRules(McpToolRuleListInternal rules);
+    AgentMcpToolRuleListDTO mapAgentRules(AgentMcpToolRuleListInternal rules);
 
-    CreateMcpToolRuleRequestInternal mapCreateRule(CreateMcpToolRuleRequestDTO dto);
+    CreateAgentMcpToolRuleRequestInternal mapCreateAgentRule(CreateAgentMcpToolRuleRequestDTO dto);
 
-    UpdateMcpToolRuleRequestInternal mapUpdateRule(UpdateMcpToolRuleRequestDTO dto);
+    UpdateAgentMcpToolRuleRequestInternal mapUpdateAgentRule(UpdateAgentMcpToolRuleRequestDTO dto);
 
     @Mapping(target = "removeToolsItem", ignore = true)
     DiscoveredToolInfoListDTO mapDiscovered(DiscoveredToolInfoListInternal discovered);
