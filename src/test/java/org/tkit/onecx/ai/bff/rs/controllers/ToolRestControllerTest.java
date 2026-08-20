@@ -72,7 +72,7 @@ class ToolRestControllerTest extends AbstractTest {
                 .auth().oauth2(keycloakTestClient.getAccessToken(ADMIN))
                 .header(APM_HEADER_PARAM, ADMIN)
                 .contentType(APPLICATION_JSON)
-                .post("/tools/" + toolId + "/discovered-tools")
+                .post(toolId + "/discovered-tools")
                 .then()
                 .statusCode(Response.Status.OK.getStatusCode())
                 .extract()
@@ -100,7 +100,7 @@ class ToolRestControllerTest extends AbstractTest {
                 .auth().oauth2(keycloakTestClient.getAccessToken(ADMIN))
                 .header(APM_HEADER_PARAM, ADMIN)
                 .contentType(APPLICATION_JSON)
-                .post("/tools/" + toolId + "/discovered-tools")
+                .post(toolId + "/discovered-tools")
                 .then()
                 .statusCode(Response.Status.NOT_FOUND.getStatusCode());
     }
@@ -128,7 +128,7 @@ class ToolRestControllerTest extends AbstractTest {
                 .auth().oauth2(keycloakTestClient.getAccessToken(ADMIN))
                 .header(APM_HEADER_PARAM, ADMIN)
                 .contentType(APPLICATION_JSON)
-                .get("/tools/" + testId)
+                .get(testId)
                 .then()
                 .statusCode(Response.Status.OK.getStatusCode())
                 .extract()
@@ -174,7 +174,7 @@ class ToolRestControllerTest extends AbstractTest {
                 .header(APM_HEADER_PARAM, ADMIN)
                 .contentType(APPLICATION_JSON)
                 .body(internalCriteria)
-                .post("/tools/search")
+                .post("/search")
                 .then()
                 .statusCode(Response.Status.OK.getStatusCode())
                 .extract()
@@ -225,7 +225,7 @@ class ToolRestControllerTest extends AbstractTest {
                 .header(APM_HEADER_PARAM, ADMIN)
                 .contentType(APPLICATION_JSON)
                 .body(createDTO)
-                .post("/tools")
+                .post()
                 .then()
                 .statusCode(Response.Status.CREATED.getStatusCode())
                 .extract()
@@ -268,7 +268,7 @@ class ToolRestControllerTest extends AbstractTest {
                 .header(APM_HEADER_PARAM, ADMIN)
                 .contentType(APPLICATION_JSON)
                 .body(updateDTO)
-                .put("/tools/" + testId)
+                .put(testId)
                 .then()
                 .statusCode(Response.Status.OK.getStatusCode())
                 .extract()
@@ -289,7 +289,7 @@ class ToolRestControllerTest extends AbstractTest {
                 .header(APM_HEADER_PARAM, ADMIN)
                 .contentType(APPLICATION_JSON)
                 .body(updateDTO)
-                .put("/tools/1")
+                .put("1")
                 .then()
                 .statusCode(Response.Status.BAD_REQUEST.getStatusCode());
     }
@@ -309,7 +309,7 @@ class ToolRestControllerTest extends AbstractTest {
                 .auth().oauth2(keycloakTestClient.getAccessToken(ADMIN))
                 .header(APM_HEADER_PARAM, ADMIN)
                 .contentType(APPLICATION_JSON)
-                .delete("/tools/" + testId)
+                .delete(testId)
                 .then()
                 .statusCode(Response.Status.NO_CONTENT.getStatusCode());
     }
@@ -329,7 +329,7 @@ class ToolRestControllerTest extends AbstractTest {
                 .auth().oauth2(keycloakTestClient.getAccessToken(ADMIN))
                 .header(APM_HEADER_PARAM, ADMIN)
                 .contentType(APPLICATION_JSON)
-                .delete("/tools/" + testId)
+                .delete(testId)
                 .then()
                 .statusCode(Response.Status.BAD_REQUEST.getStatusCode());
     }
