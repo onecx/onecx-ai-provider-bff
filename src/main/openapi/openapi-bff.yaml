@@ -315,7 +315,7 @@ paths:
           tools:
             - read
       tags:
-        - tool
+        - agent
       description: Get MCP tool rules for an Agent and Tool
       operationId: getAgentMcpToolRules
       parameters:
@@ -344,7 +344,7 @@ paths:
           tools:
             - write
       tags:
-        - tool
+        - agent
       description: Create an MCP tool rule for an Agent and Tool
       operationId: createAgentMcpToolRule
       parameters:
@@ -381,7 +381,7 @@ paths:
           tools:
             - write
       tags:
-        - tool
+        - agent
       description: Update an MCP tool rule for an Agent and Tool
       operationId: updateAgentMcpToolRule
       parameters:
@@ -421,7 +421,7 @@ paths:
           tools:
             - delete
       tags:
-        - tool
+        - agent
       description: Delete an MCP tool rule for an Agent and Tool
       operationId: deleteAgentMcpToolRule
       parameters:

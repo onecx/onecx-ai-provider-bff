@@ -86,50 +86,6 @@ public class ToolRestController implements ToolApiService {
         }
     }
 
-    @Override
-    public Response getAgentMcpToolRules(String agentId, String toolId) {
-        try (Response response = toolInternalApi.getAgentMcpToolRules(agentId, toolId)) {
-            if (response.getStatus() != Response.Status.OK.getStatusCode()) {
-                return Response.status(response.getStatus()).build();
-            }
-            var rules = response.readEntity(AgentMcpToolRuleListInternal.class);
-            return Response.ok(toolMapper.mapAgentRules(rules)).build();
-        }
-    }
-
-    @Override
-    public Response createAgentMcpToolRule(String agentId, String toolId,
-            CreateAgentMcpToolRuleRequestDTO createAgentMcpToolRuleRequestDTO) {
-        var request = toolMapper.mapCreateAgentRule(createAgentMcpToolRuleRequestDTO);
-        try (Response response = toolInternalApi.createAgentMcpToolRule(agentId, toolId, request)) {
-            if (response.getStatus() != Response.Status.CREATED.getStatusCode()) {
-                return Response.status(response.getStatus()).build();
-            }
-            var rule = response.readEntity(AgentMcpToolRuleInternal.class);
-            return Response.status(Response.Status.CREATED).entity(toolMapper.mapAgentRule(rule)).build();
-        }
-    }
-
-    @Override
-    public Response updateAgentMcpToolRule(String agentId, String toolId, String ruleId,
-            UpdateAgentMcpToolRuleRequestDTO updateAgentMcpToolRuleRequestDTO) {
-        var request = toolMapper.mapUpdateAgentRule(updateAgentMcpToolRuleRequestDTO);
-        try (Response response = toolInternalApi.updateAgentMcpToolRule(agentId, toolId, ruleId, request)) {
-            if (response.getStatus() != Response.Status.OK.getStatusCode()) {
-                return Response.status(response.getStatus()).build();
-            }
-            var rule = response.readEntity(AgentMcpToolRuleInternal.class);
-            return Response.ok(toolMapper.mapAgentRule(rule)).build();
-        }
-    }
-
-    @Override
-    public Response deleteAgentMcpToolRule(String agentId, String toolId, String ruleId) {
-        try (Response response = toolInternalApi.deleteAgentMcpToolRule(agentId, toolId, ruleId)) {
-            return Response.status(response.getStatus()).build();
-        }
-    }
-
     @ServerExceptionMapper
     public Response restException(ClientWebApplicationException ex) {
         return exceptionMapper.clientException(ex);
