@@ -178,7 +178,7 @@
                             <goal>wget</goal>
                         </goals>
                         <configuration>
-                            <uri>https://raw.githubusercontent.com/onecx/onecx-ai-provider-svc/refs/heads/feat/agent-tools-validation/src/main/openapi/onecx-ai-internal.yaml</uri>
+                            <uri>https://raw.githubusercontent.com/onecx/onecx-ai-provider-svc/refs/heads/main/src/main/openapi/onecx-ai-internal.yaml</uri>
                             <outputDirectory>target/tmp/openapi</outputDirectory>
                             <outputFileName>ai-management-svc-internal.yaml</outputFileName>
                             <skipCache>true</skipCache>
