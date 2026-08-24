@@ -16,7 +16,7 @@
           "appId": "onecx-ai-provider-bff",
           "permissions": {
             "providers": ["read", "write", "delete"],
-            "agents": ["read", "write", "delete"],
+            "agents": ["read", "write", "delete", "dispatch"],
             "tools": ["read", "write", "delete"],
             "models": ["read", "write", "delete"],
             "scaffolds": ["read", "write", "delete"],
