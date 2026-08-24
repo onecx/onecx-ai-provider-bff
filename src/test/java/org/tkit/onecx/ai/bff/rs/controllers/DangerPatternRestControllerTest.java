@@ -169,4 +169,108 @@ class DangerPatternRestControllerTest extends AbstractTest {
                 .then()
                 .statusCode(Response.Status.NO_CONTENT.getStatusCode());
     }
+
+    @Test
+    void getDangerPatterns_500Test() {
+        mockServerClient.when(
+                request().withPath("/internal/danger-patterns")
+                        .withMethod(HttpMethod.GET))
+                .withPriority(100)
+                .withId(MOCK_ID)
+                .respond(httpRequest -> response()
+                        .withStatusCode(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode()));
+
+        given()
+                .when()
+                .auth().oauth2(keycloakTestClient.getAccessToken(ADMIN))
+                .header(APM_HEADER_PARAM, ADMIN)
+                .contentType(APPLICATION_JSON)
+                .get()
+                .then()
+                .statusCode(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode());
+    }
+
+    @Test
+    void createDangerPattern_400Test() {
+        mockServerClient.when(
+                request().withPath("/internal/danger-patterns")
+                        .withMethod(HttpMethod.POST))
+                .withPriority(100)
+                .withId(MOCK_ID)
+                .respond(httpRequest -> response()
+                        .withStatusCode(Response.Status.BAD_REQUEST.getStatusCode()));
+
+        CreateDangerPatternRequestDTO request = new CreateDangerPatternRequestDTO();
+        request.setPattern("purge");
+        request.setDangerLevel(DangerLevelDTO.DANGEROUS);
+
+        given()
+                .when()
+                .auth().oauth2(keycloakTestClient.getAccessToken(ADMIN))
+                .header(APM_HEADER_PARAM, ADMIN)
+                .contentType(APPLICATION_JSON)
+                .body(request)
+                .post()
+                .then()
+                .statusCode(Response.Status.BAD_REQUEST.getStatusCode());
+    }
+
+    @Test
+    void updateDangerPattern_200Test() {
+        DangerPatternInternal updated = new DangerPatternInternal()
+                .id("p1").pattern("updated-pattern").dangerLevel(DangerLevelInternal.WARNING);
+
+        String id = "p1";
+        mockServerClient.when(
+                request().withPath("/internal/danger-patterns/" + id)
+                        .withMethod(HttpMethod.PUT))
+                .withPriority(100)
+                .withId(MOCK_ID)
+                .respond(httpRequest -> response()
+                        .withStatusCode(Response.Status.OK.getStatusCode())
+                        .withContentType(MediaType.APPLICATION_JSON)
+                        .withBody(JsonBody.json(updated)));
+
+        UpdateDangerPatternRequestDTO request = new UpdateDangerPatternRequestDTO();
+        request.setModificationCount(0);
+        request.setPattern("updated-pattern");
+        request.setDangerLevel(DangerLevelDTO.WARNING);
+
+        var response = given()
+                .when()
+                .auth().oauth2(keycloakTestClient.getAccessToken(ADMIN))
+                .header(APM_HEADER_PARAM, ADMIN)
+                .contentType(APPLICATION_JSON)
+                .body(request)
+                .put(id)
+                .then()
+                .statusCode(Response.Status.OK.getStatusCode())
+                .extract()
+                .as(DangerPatternDTO.class);
+
+        Assertions.assertNotNull(response);
+        Assertions.assertEquals("p1", response.getId());
+        Assertions.assertEquals(updated.getDangerLevel().name(), response.getDangerLevel().name());
+    }
+
+    @Test
+    void deleteDangerPattern_400Test() {
+        String id = "p1";
+        mockServerClient.when(
+                request().withPath("/internal/danger-patterns/" + id)
+                        .withMethod(HttpMethod.DELETE))
+                .withPriority(100)
+                .withId(MOCK_ID)
+                .respond(httpRequest -> response()
+                        .withStatusCode(Response.Status.BAD_REQUEST.getStatusCode()));
+
+        given()
+                .when()
+                .auth().oauth2(keycloakTestClient.getAccessToken(ADMIN))
+                .header(APM_HEADER_PARAM, ADMIN)
+                .contentType(APPLICATION_JSON)
+                .delete(id)
+                .then()
+                .statusCode(Response.Status.BAD_REQUEST.getStatusCode());
+    }
 }

@@ -412,4 +412,115 @@ class AgentRestControllerTest extends AbstractTest {
                 .then()
                 .statusCode(Response.Status.NO_CONTENT.getStatusCode());
     }
+
+    @Test
+    void getAgentMcpToolRules_404Test() {
+        String agentId = "a1";
+        String toolId = "missing";
+        mockServerClient.when(
+                request().withPath("/internal/agents/" + agentId + "/tools/" + toolId + "/mcp-tool-rules")
+                        .withMethod(HttpMethod.GET))
+                .withPriority(100)
+                .withId(MOCK_ID)
+                .respond(httpRequest -> response()
+                        .withStatusCode(Response.Status.NOT_FOUND.getStatusCode()));
+
+        given()
+                .when()
+                .auth().oauth2(keycloakTestClient.getAccessToken(ADMIN))
+                .header(APM_HEADER_PARAM, ADMIN)
+                .contentType(APPLICATION_JSON)
+                .get(agentId + "/tools/" + toolId + "/mcp-tool-rules")
+                .then()
+                .statusCode(Response.Status.NOT_FOUND.getStatusCode());
+    }
+
+    @Test
+    void createAgentMcpToolRule_400Test() {
+        String agentId = "a1";
+        String toolId = "t1";
+        mockServerClient.when(
+                request().withPath("/internal/agents/" + agentId + "/tools/" + toolId + "/mcp-tool-rules")
+                        .withMethod(HttpMethod.POST))
+                .withPriority(100)
+                .withId(MOCK_ID)
+                .respond(httpRequest -> response()
+                        .withStatusCode(Response.Status.BAD_REQUEST.getStatusCode()));
+
+        CreateAgentMcpToolRuleRequestDTO request = new CreateAgentMcpToolRuleRequestDTO();
+        request.setToolName("deleteProposal");
+        request.setAllowed(ToolPermissionDTO.DENY);
+
+        given()
+                .when()
+                .auth().oauth2(keycloakTestClient.getAccessToken(ADMIN))
+                .header(APM_HEADER_PARAM, ADMIN)
+                .contentType(APPLICATION_JSON)
+                .body(request)
+                .post(agentId + "/tools/" + toolId + "/mcp-tool-rules")
+                .then()
+                .statusCode(Response.Status.BAD_REQUEST.getStatusCode());
+    }
+
+    @Test
+    void updateAgentMcpToolRule_200Test() {
+        AgentMcpToolRuleInternal updated = new AgentMcpToolRuleInternal()
+                .id("r1").toolName("deleteProposal").allowed(ToolPermissionInternal.ALLOW);
+
+        String agentId = "a1";
+        String toolId = "t1";
+        String ruleId = "r1";
+        mockServerClient.when(
+                request().withPath("/internal/agents/" + agentId + "/tools/" + toolId + "/mcp-tool-rules/" + ruleId)
+                        .withMethod(HttpMethod.PUT))
+                .withPriority(100)
+                .withId(MOCK_ID)
+                .respond(httpRequest -> response()
+                        .withStatusCode(Response.Status.OK.getStatusCode())
+                        .withContentType(MediaType.APPLICATION_JSON)
+                        .withBody(JsonBody.json(updated)));
+
+        UpdateAgentMcpToolRuleRequestDTO request = new UpdateAgentMcpToolRuleRequestDTO();
+        request.setModificationCount(0);
+        request.setAllowed(ToolPermissionDTO.ALLOW);
+
+        var response = given()
+                .when()
+                .auth().oauth2(keycloakTestClient.getAccessToken(ADMIN))
+                .header(APM_HEADER_PARAM, ADMIN)
+                .contentType(APPLICATION_JSON)
+                .body(request)
+                .put(agentId + "/tools/" + toolId + "/mcp-tool-rules/" + ruleId)
+                .then()
+                .statusCode(Response.Status.OK.getStatusCode())
+                .extract()
+                .as(AgentMcpToolRuleDTO.class);
+
+        Assertions.assertNotNull(response);
+        Assertions.assertEquals("r1", response.getId());
+        Assertions.assertEquals(updated.getAllowed().name(), response.getAllowed().name());
+    }
+
+    @Test
+    void deleteAgentMcpToolRule_400Test() {
+        String agentId = "a1";
+        String toolId = "t1";
+        String ruleId = "r1";
+        mockServerClient.when(
+                request().withPath("/internal/agents/" + agentId + "/tools/" + toolId + "/mcp-tool-rules/" + ruleId)
+                        .withMethod(HttpMethod.DELETE))
+                .withPriority(100)
+                .withId(MOCK_ID)
+                .respond(httpRequest -> response()
+                        .withStatusCode(Response.Status.BAD_REQUEST.getStatusCode()));
+
+        given()
+                .when()
+                .auth().oauth2(keycloakTestClient.getAccessToken(ADMIN))
+                .header(APM_HEADER_PARAM, ADMIN)
+                .contentType(APPLICATION_JSON)
+                .delete(agentId + "/tools/" + toolId + "/mcp-tool-rules/" + ruleId)
+                .then()
+                .statusCode(Response.Status.BAD_REQUEST.getStatusCode());
+    }
 }
