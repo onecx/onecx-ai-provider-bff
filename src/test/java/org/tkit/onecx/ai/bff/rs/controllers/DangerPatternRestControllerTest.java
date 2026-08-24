@@ -274,4 +274,52 @@ class DangerPatternRestControllerTest extends AbstractTest {
                 .then()
                 .statusCode(Response.Status.BAD_REQUEST.getStatusCode());
     }
+
+    @Test
+    void getDangerPatterns_404Test() {
+        mockServerClient.when(
+                request().withPath("/internal/danger-patterns")
+                        .withMethod(HttpMethod.GET))
+                .withPriority(100)
+                .withId(MOCK_ID)
+                .respond(httpRequest -> response()
+                        .withStatusCode(Response.Status.NOT_FOUND.getStatusCode()));
+
+        given()
+                .when()
+                .auth().oauth2(keycloakTestClient.getAccessToken(ADMIN))
+                .header(APM_HEADER_PARAM, ADMIN)
+                .contentType(APPLICATION_JSON)
+                .get()
+                .then()
+                .statusCode(Response.Status.NOT_FOUND.getStatusCode());
+    }
+
+    @Test
+    void createDangerPattern_constraintViolation_400Test() {
+        // Send an empty body to trigger bean validation constraint violation
+        given()
+                .when()
+                .auth().oauth2(keycloakTestClient.getAccessToken(ADMIN))
+                .header(APM_HEADER_PARAM, ADMIN)
+                .contentType(APPLICATION_JSON)
+                .body("{}")
+                .post()
+                .then()
+                .statusCode(Response.Status.BAD_REQUEST.getStatusCode());
+    }
+
+    @Test
+    void updateDangerPattern_constraintViolation_400Test() {
+        // Send an empty body to trigger bean validation constraint violation
+        given()
+                .when()
+                .auth().oauth2(keycloakTestClient.getAccessToken(ADMIN))
+                .header(APM_HEADER_PARAM, ADMIN)
+                .contentType(APPLICATION_JSON)
+                .body("{}")
+                .put("p1")
+                .then()
+                .statusCode(Response.Status.BAD_REQUEST.getStatusCode());
+    }
 }
