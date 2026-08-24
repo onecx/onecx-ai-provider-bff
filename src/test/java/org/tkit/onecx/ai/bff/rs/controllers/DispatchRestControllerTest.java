@@ -86,4 +86,50 @@ class DispatchRestControllerTest extends AbstractTest {
         Assertions.assertEquals(fakeData.getType().name(), response.getType().name());
         Assertions.assertEquals(fakeData.getConversationId(), response.getConversationId());
     }
+
+    @Test
+    void chatTest_clientWebApplicationException_400() {
+        var message = new ChatMessageDTO();
+        message.setConversationId("conversation-1");
+        message.setType(ChatMessageDTO.TypeEnum.USER);
+        message.setMessage("hello");
+
+        var request = new ChatRequestDTO();
+        request.setChatMessage(message);
+
+        ChatMessageInternal fakeData = new ChatMessageInternal()
+                .conversationId("conversation-1")
+                .type(ChatMessageInternal.TypeEnum.ASSISTANT)
+                .message("ok");
+
+        mockServerClient.when(
+                request().withPath("/internal/dispatch/chat")
+                        .withMethod(HttpMethod.POST))
+                .withPriority(100)
+                .withId(MOCK_ID)
+                .respond(response()
+                        .withStatusCode(Response.Status.BAD_REQUEST.getStatusCode()));
+
+        given()
+                .when()
+                .auth().oauth2(keycloakTestClient.getAccessToken(ADMIN))
+                .header(APM_HEADER_PARAM, ADMIN)
+                .contentType(APPLICATION_JSON)
+                .body(request)
+                .post()
+                .then()
+                .statusCode(Response.Status.BAD_REQUEST.getStatusCode());
+    }
+
+    @Test
+    void chatTest_constraint_violations_missing_body_400() {
+        given()
+                .when()
+                .auth().oauth2(keycloakTestClient.getAccessToken(ADMIN))
+                .header(APM_HEADER_PARAM, ADMIN)
+                .contentType(APPLICATION_JSON)
+                .post()
+                .then()
+                .statusCode(Response.Status.BAD_REQUEST.getStatusCode());
+    }
 }
