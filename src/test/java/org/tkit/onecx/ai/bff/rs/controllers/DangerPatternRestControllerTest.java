@@ -322,4 +322,79 @@ class DangerPatternRestControllerTest extends AbstractTest {
                 .then()
                 .statusCode(Response.Status.BAD_REQUEST.getStatusCode());
     }
+
+    @Test
+    void getDangerPatterns_204Test() {
+        // 204 is a 2xx code — REST client does NOT throw, so the if-branch is reached
+        mockServerClient.when(
+                request().withPath("/internal/danger-patterns")
+                        .withMethod(HttpMethod.GET))
+                .withPriority(100)
+                .withId(MOCK_ID)
+                .respond(httpRequest -> response()
+                        .withStatusCode(Response.Status.NO_CONTENT.getStatusCode()));
+
+        given()
+                .when()
+                .auth().oauth2(keycloakTestClient.getAccessToken(ADMIN))
+                .header(APM_HEADER_PARAM, ADMIN)
+                .contentType(APPLICATION_JSON)
+                .get()
+                .then()
+                .statusCode(Response.Status.NO_CONTENT.getStatusCode());
+    }
+
+    @Test
+    void createDangerPattern_204Test() {
+        // 204 is a 2xx code — REST client does NOT throw, so the if-branch is reached
+        mockServerClient.when(
+                request().withPath("/internal/danger-patterns")
+                        .withMethod(HttpMethod.POST))
+                .withPriority(100)
+                .withId(MOCK_ID)
+                .respond(httpRequest -> response()
+                        .withStatusCode(Response.Status.NO_CONTENT.getStatusCode()));
+
+        CreateDangerPatternRequestDTO request = new CreateDangerPatternRequestDTO();
+        request.setPattern("purge");
+        request.setDangerLevel(DangerLevelDTO.DANGEROUS);
+
+        given()
+                .when()
+                .auth().oauth2(keycloakTestClient.getAccessToken(ADMIN))
+                .header(APM_HEADER_PARAM, ADMIN)
+                .contentType(APPLICATION_JSON)
+                .body(request)
+                .post()
+                .then()
+                .statusCode(Response.Status.NO_CONTENT.getStatusCode());
+    }
+
+    @Test
+    void updateDangerPattern_204Test() {
+        // 204 is a 2xx code — REST client does NOT throw, so the if-branch is reached
+        String id = "p1";
+        mockServerClient.when(
+                request().withPath("/internal/danger-patterns/" + id)
+                        .withMethod(HttpMethod.PUT))
+                .withPriority(100)
+                .withId(MOCK_ID)
+                .respond(httpRequest -> response()
+                        .withStatusCode(Response.Status.NO_CONTENT.getStatusCode()));
+
+        UpdateDangerPatternRequestDTO request = new UpdateDangerPatternRequestDTO();
+        request.setModificationCount(0);
+        request.setPattern("purge");
+        request.setDangerLevel(DangerLevelDTO.WARNING);
+
+        given()
+                .when()
+                .auth().oauth2(keycloakTestClient.getAccessToken(ADMIN))
+                .header(APM_HEADER_PARAM, ADMIN)
+                .contentType(APPLICATION_JSON)
+                .body(request)
+                .put(id)
+                .then()
+                .statusCode(Response.Status.NO_CONTENT.getStatusCode());
+    }
 }

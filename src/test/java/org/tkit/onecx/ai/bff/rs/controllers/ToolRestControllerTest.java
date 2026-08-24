@@ -106,6 +106,28 @@ class ToolRestControllerTest extends AbstractTest {
     }
 
     @Test
+    void getDiscoveredTools_204Test() {
+        // 204 is a 2xx code — REST client does NOT throw, so the if-branch is reached
+        String toolId = "t1";
+        mockServerClient.when(
+                request().withPath("/internal/tools/" + toolId + "/discovered-tools")
+                        .withMethod(HttpMethod.POST))
+                .withPriority(100)
+                .withId(MOCK_ID)
+                .respond(httpRequest -> response()
+                        .withStatusCode(Response.Status.NO_CONTENT.getStatusCode()));
+
+        given()
+                .when()
+                .auth().oauth2(keycloakTestClient.getAccessToken(ADMIN))
+                .header(APM_HEADER_PARAM, ADMIN)
+                .contentType(APPLICATION_JSON)
+                .post(toolId + "/discovered-tools")
+                .then()
+                .statusCode(Response.Status.NO_CONTENT.getStatusCode());
+    }
+
+    @Test
     void getToolById_200Test() {
         ToolInternal fakeData = new ToolInternal()
                 .id("1").name("tool1").description("desc").type(ToolTypeInternal.MCP)

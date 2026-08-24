@@ -523,4 +523,84 @@ class AgentRestControllerTest extends AbstractTest {
                 .then()
                 .statusCode(Response.Status.BAD_REQUEST.getStatusCode());
     }
+
+    @Test
+    void getAgentMcpToolRules_204Test() {
+        // 204 is a 2xx code — REST client does NOT throw, so the if-branch is reached
+        String agentId = "a1";
+        String toolId = "t1";
+        mockServerClient.when(
+                request().withPath("/internal/agents/" + agentId + "/tools/" + toolId + "/mcp-tool-rules")
+                        .withMethod(HttpMethod.GET))
+                .withPriority(100)
+                .withId(MOCK_ID)
+                .respond(httpRequest -> response()
+                        .withStatusCode(Response.Status.NO_CONTENT.getStatusCode()));
+
+        given()
+                .when()
+                .auth().oauth2(keycloakTestClient.getAccessToken(ADMIN))
+                .header(APM_HEADER_PARAM, ADMIN)
+                .contentType(APPLICATION_JSON)
+                .get(agentId + "/tools/" + toolId + "/mcp-tool-rules")
+                .then()
+                .statusCode(Response.Status.NO_CONTENT.getStatusCode());
+    }
+
+    @Test
+    void createAgentMcpToolRule_204Test() {
+        // 204 is a 2xx code — REST client does NOT throw, so the if-branch is reached
+        String agentId = "a1";
+        String toolId = "t1";
+        mockServerClient.when(
+                request().withPath("/internal/agents/" + agentId + "/tools/" + toolId + "/mcp-tool-rules")
+                        .withMethod(HttpMethod.POST))
+                .withPriority(100)
+                .withId(MOCK_ID)
+                .respond(httpRequest -> response()
+                        .withStatusCode(Response.Status.NO_CONTENT.getStatusCode()));
+
+        CreateAgentMcpToolRuleRequestDTO request = new CreateAgentMcpToolRuleRequestDTO();
+        request.setToolName("deleteProposal");
+        request.setAllowed(ToolPermissionDTO.DENY);
+
+        given()
+                .when()
+                .auth().oauth2(keycloakTestClient.getAccessToken(ADMIN))
+                .header(APM_HEADER_PARAM, ADMIN)
+                .contentType(APPLICATION_JSON)
+                .body(request)
+                .post(agentId + "/tools/" + toolId + "/mcp-tool-rules")
+                .then()
+                .statusCode(Response.Status.NO_CONTENT.getStatusCode());
+    }
+
+    @Test
+    void updateAgentMcpToolRule_204Test() {
+        // 204 is a 2xx code — REST client does NOT throw, so the if-branch is reached
+        String agentId = "a1";
+        String toolId = "t1";
+        String ruleId = "r1";
+        mockServerClient.when(
+                request().withPath("/internal/agents/" + agentId + "/tools/" + toolId + "/mcp-tool-rules/" + ruleId)
+                        .withMethod(HttpMethod.PUT))
+                .withPriority(100)
+                .withId(MOCK_ID)
+                .respond(httpRequest -> response()
+                        .withStatusCode(Response.Status.NO_CONTENT.getStatusCode()));
+
+        UpdateAgentMcpToolRuleRequestDTO request = new UpdateAgentMcpToolRuleRequestDTO();
+        request.setModificationCount(0);
+        request.setAllowed(ToolPermissionDTO.ALLOW);
+
+        given()
+                .when()
+                .auth().oauth2(keycloakTestClient.getAccessToken(ADMIN))
+                .header(APM_HEADER_PARAM, ADMIN)
+                .contentType(APPLICATION_JSON)
+                .body(request)
+                .put(agentId + "/tools/" + toolId + "/mcp-tool-rules/" + ruleId)
+                .then()
+                .statusCode(Response.Status.NO_CONTENT.getStatusCode());
+    }
 }
