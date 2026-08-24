@@ -20,8 +20,8 @@ paths:
     post:
       x-onecx:
         permissions:
-          dispatch:
-            - read
+          agents:
+            - dispatch
       tags:
         - dispatch
       summary: Chat with AI
@@ -1077,17 +1077,6 @@ paths:
               schema:
                 $ref: '#/components/schemas/ProblemDetailResponse'
 components:
-  securitySchemes:
-    oauth2:
-      type: oauth2
-      flows:
-        clientCredentials:
-          tokenUrl: https://oauth.simple.api/token
-          scopes:
-            ocx-ai:all: Grants access to all operations
-            ocx-ai:read: Grants read access
-            ocx-ai:write: Grants write access
-            ocx-ai:delete: Grants access to delete operations
   schemas:
     AgentFilter:
       type: object

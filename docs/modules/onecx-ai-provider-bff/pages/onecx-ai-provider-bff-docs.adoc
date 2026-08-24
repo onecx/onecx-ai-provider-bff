@@ -66,6 +66,7 @@ app:
             read: permission on all GET requests and POST search
             write: permission on PUT, POST, PATCH requests, where objects are saved or updated
             delete: permission on all DELETE requests
+            dispatch: permission to dispatch tasks or chat messages to agents
           tools:
             read: permission on all GET requests and POST search
             write: permission on PUT, POST, PATCH requests, where objects are saved or updated
@@ -86,6 +87,8 @@ app:
             read: permission on all GET requests and POST search
             write: permission on PUT, POST, PATCH requests, where objects are saved or updated
             delete: permission on all DELETE requests
+          dispatch:
+            write: permission on PUT, POST, PATCH requests, where objects are saved or updated
     keycloak:
       client:
         enabled: true
