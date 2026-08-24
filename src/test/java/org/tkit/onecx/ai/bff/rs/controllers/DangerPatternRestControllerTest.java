@@ -180,6 +180,7 @@ class DangerPatternRestControllerTest extends AbstractTest {
                 .respond(httpRequest -> response()
                         .withStatusCode(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode()));
 
+        // ExceptionMapper converts 500 from SVC to 400 (BAD_REQUEST) for BFF clients
         given()
                 .when()
                 .auth().oauth2(keycloakTestClient.getAccessToken(ADMIN))
@@ -187,7 +188,7 @@ class DangerPatternRestControllerTest extends AbstractTest {
                 .contentType(APPLICATION_JSON)
                 .get()
                 .then()
-                .statusCode(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode());
+                .statusCode(Response.Status.BAD_REQUEST.getStatusCode());
     }
 
     @Test
