@@ -97,11 +97,6 @@ class DispatchRestControllerTest extends AbstractTest {
         var request = new ChatRequestDTO();
         request.setChatMessage(message);
 
-        ChatMessageInternal fakeData = new ChatMessageInternal()
-                .conversationId("conversation-1")
-                .type(ChatMessageInternal.TypeEnum.ASSISTANT)
-                .message("ok");
-
         mockServerClient.when(
                 request().withPath("/internal/dispatch/chat")
                         .withMethod(HttpMethod.POST))
