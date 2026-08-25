@@ -397,4 +397,88 @@ class DangerPatternRestControllerTest extends AbstractTest {
                 .then()
                 .statusCode(Response.Status.NO_CONTENT.getStatusCode());
     }
+
+    @Test
+    void getDangerPatterns_200_invalidBody_throwsInTryWithResources() {
+        // 200 with text/plain body → readEntity fails inside try-with-resources
+        // → close() called with exception pending → covers exception branch of try-with-resources
+        mockServerClient.when(
+                request().withPath("/internal/danger-patterns")
+                        .withMethod(HttpMethod.GET))
+                .withPriority(100)
+                .withId(MOCK_ID)
+                .respond(httpRequest -> response()
+                        .withStatusCode(Response.Status.OK.getStatusCode())
+                        .withContentType(MediaType.TEXT_PLAIN)
+                        .withBody("not-json"));
+
+        given()
+                .when()
+                .auth().oauth2(keycloakTestClient.getAccessToken(ADMIN))
+                .header(APM_HEADER_PARAM, ADMIN)
+                .contentType(APPLICATION_JSON)
+                .get()
+                .then()
+                .statusCode(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode());
+    }
+
+    @Test
+    void createDangerPattern_201_invalidBody_throwsInTryWithResources() {
+        // 201 with text/plain body → readEntity fails inside try-with-resources
+        // → close() called with exception pending → covers exception branch of try-with-resources
+        mockServerClient.when(
+                request().withPath("/internal/danger-patterns")
+                        .withMethod(HttpMethod.POST))
+                .withPriority(100)
+                .withId(MOCK_ID)
+                .respond(httpRequest -> response()
+                        .withStatusCode(Response.Status.CREATED.getStatusCode())
+                        .withContentType(MediaType.TEXT_PLAIN)
+                        .withBody("not-json"));
+
+        CreateDangerPatternRequestDTO request = new CreateDangerPatternRequestDTO();
+        request.setPattern("purge");
+        request.setDangerLevel(DangerLevelDTO.DANGEROUS);
+
+        given()
+                .when()
+                .auth().oauth2(keycloakTestClient.getAccessToken(ADMIN))
+                .header(APM_HEADER_PARAM, ADMIN)
+                .contentType(APPLICATION_JSON)
+                .body(request)
+                .post()
+                .then()
+                .statusCode(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode());
+    }
+
+    @Test
+    void updateDangerPattern_200_invalidBody_throwsInTryWithResources() {
+        // 200 with text/plain body → readEntity fails inside try-with-resources
+        // → close() called with exception pending → covers exception branch of try-with-resources
+        String id = "p1";
+        mockServerClient.when(
+                request().withPath("/internal/danger-patterns/" + id)
+                        .withMethod(HttpMethod.PUT))
+                .withPriority(100)
+                .withId(MOCK_ID)
+                .respond(httpRequest -> response()
+                        .withStatusCode(Response.Status.OK.getStatusCode())
+                        .withContentType(MediaType.TEXT_PLAIN)
+                        .withBody("not-json"));
+
+        UpdateDangerPatternRequestDTO request = new UpdateDangerPatternRequestDTO();
+        request.setModificationCount(0);
+        request.setPattern("purge");
+        request.setDangerLevel(DangerLevelDTO.WARNING);
+
+        given()
+                .when()
+                .auth().oauth2(keycloakTestClient.getAccessToken(ADMIN))
+                .header(APM_HEADER_PARAM, ADMIN)
+                .contentType(APPLICATION_JSON)
+                .body(request)
+                .put(id)
+                .then()
+                .statusCode(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode());
+    }
 }

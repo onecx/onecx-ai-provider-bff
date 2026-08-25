@@ -603,4 +603,93 @@ class AgentRestControllerTest extends AbstractTest {
                 .then()
                 .statusCode(Response.Status.NO_CONTENT.getStatusCode());
     }
+
+    @Test
+    void getAgentMcpToolRules_200_invalidBody_throwsInTryWithResources() {
+        // 200 with text/plain body → readEntity fails inside try-with-resources
+        // → close() called with exception pending → covers exception branch of try-with-resources
+        String agentId = "a1";
+        String toolId = "t1";
+        mockServerClient.when(
+                request().withPath("/internal/agents/" + agentId + "/tools/" + toolId + "/mcp-tool-rules")
+                        .withMethod(HttpMethod.GET))
+                .withPriority(100)
+                .withId(MOCK_ID)
+                .respond(httpRequest -> response()
+                        .withStatusCode(Response.Status.OK.getStatusCode())
+                        .withContentType(MediaType.TEXT_PLAIN)
+                        .withBody("not-json"));
+
+        given()
+                .when()
+                .auth().oauth2(keycloakTestClient.getAccessToken(ADMIN))
+                .header(APM_HEADER_PARAM, ADMIN)
+                .contentType(APPLICATION_JSON)
+                .get(agentId + "/tools/" + toolId + "/mcp-tool-rules")
+                .then()
+                .statusCode(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode());
+    }
+
+    @Test
+    void createAgentMcpToolRule_201_invalidBody_throwsInTryWithResources() {
+        // 201 with text/plain body → readEntity fails inside try-with-resources
+        // → close() called with exception pending → covers exception branch of try-with-resources
+        String agentId = "a1";
+        String toolId = "t1";
+        mockServerClient.when(
+                request().withPath("/internal/agents/" + agentId + "/tools/" + toolId + "/mcp-tool-rules")
+                        .withMethod(HttpMethod.POST))
+                .withPriority(100)
+                .withId(MOCK_ID)
+                .respond(httpRequest -> response()
+                        .withStatusCode(Response.Status.CREATED.getStatusCode())
+                        .withContentType(MediaType.TEXT_PLAIN)
+                        .withBody("not-json"));
+
+        CreateAgentMcpToolRuleRequestDTO request = new CreateAgentMcpToolRuleRequestDTO();
+        request.setToolName("getProposal");
+        request.setAllowed(ToolPermissionDTO.ALLOW);
+
+        given()
+                .when()
+                .auth().oauth2(keycloakTestClient.getAccessToken(ADMIN))
+                .header(APM_HEADER_PARAM, ADMIN)
+                .contentType(APPLICATION_JSON)
+                .body(request)
+                .post(agentId + "/tools/" + toolId + "/mcp-tool-rules")
+                .then()
+                .statusCode(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode());
+    }
+
+    @Test
+    void updateAgentMcpToolRule_200_invalidBody_throwsInTryWithResources() {
+        // 200 with text/plain body → readEntity fails inside try-with-resources
+        // → close() called with exception pending → covers exception branch of try-with-resources
+        String agentId = "a1";
+        String toolId = "t1";
+        String ruleId = "r1";
+        mockServerClient.when(
+                request().withPath("/internal/agents/" + agentId + "/tools/" + toolId + "/mcp-tool-rules/" + ruleId)
+                        .withMethod(HttpMethod.PUT))
+                .withPriority(100)
+                .withId(MOCK_ID)
+                .respond(httpRequest -> response()
+                        .withStatusCode(Response.Status.OK.getStatusCode())
+                        .withContentType(MediaType.TEXT_PLAIN)
+                        .withBody("not-json"));
+
+        UpdateAgentMcpToolRuleRequestDTO request = new UpdateAgentMcpToolRuleRequestDTO();
+        request.setModificationCount(0);
+        request.setAllowed(ToolPermissionDTO.ALLOW);
+
+        given()
+                .when()
+                .auth().oauth2(keycloakTestClient.getAccessToken(ADMIN))
+                .header(APM_HEADER_PARAM, ADMIN)
+                .contentType(APPLICATION_JSON)
+                .body(request)
+                .put(agentId + "/tools/" + toolId + "/mcp-tool-rules/" + ruleId)
+                .then()
+                .statusCode(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode());
+    }
 }

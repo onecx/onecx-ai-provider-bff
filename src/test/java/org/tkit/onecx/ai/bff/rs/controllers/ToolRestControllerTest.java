@@ -355,4 +355,29 @@ class ToolRestControllerTest extends AbstractTest {
                 .then()
                 .statusCode(Response.Status.BAD_REQUEST.getStatusCode());
     }
+
+    @Test
+    void getDiscoveredTools_200_invalidBody_throwsInTryWithResources() {
+        // 200 with text/plain body → readEntity fails inside try-with-resources
+        // → close() called with exception pending → covers exception branch of try-with-resources
+        String toolId = "t1";
+        mockServerClient.when(
+                request().withPath("/internal/tools/" + toolId + "/discovered-tools")
+                        .withMethod(HttpMethod.POST))
+                .withPriority(100)
+                .withId(MOCK_ID)
+                .respond(httpRequest -> response()
+                        .withStatusCode(Response.Status.OK.getStatusCode())
+                        .withContentType(MediaType.TEXT_PLAIN)
+                        .withBody("not-json"));
+
+        given()
+                .when()
+                .auth().oauth2(keycloakTestClient.getAccessToken(ADMIN))
+                .header(APM_HEADER_PARAM, ADMIN)
+                .contentType(APPLICATION_JSON)
+                .post(toolId + "/discovered-tools")
+                .then()
+                .statusCode(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode());
+    }
 }
