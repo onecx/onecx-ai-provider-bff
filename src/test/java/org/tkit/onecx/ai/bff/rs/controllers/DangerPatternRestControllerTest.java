@@ -7,9 +7,12 @@ import static org.mockserver.model.HttpResponse.response;
 
 import java.util.List;
 
+import jakarta.inject.Inject;
+import jakarta.validation.ConstraintViolationException;
 import jakarta.ws.rs.HttpMethod;
 import jakarta.ws.rs.core.Response;
 
+import org.jboss.resteasy.reactive.RestResponse;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -26,6 +29,7 @@ import gen.org.tkit.onecx.ai.management.bff.rs.internal.model.CreateDangerPatter
 import gen.org.tkit.onecx.ai.management.bff.rs.internal.model.DangerLevelDTO;
 import gen.org.tkit.onecx.ai.management.bff.rs.internal.model.DangerPatternDTO;
 import gen.org.tkit.onecx.ai.management.bff.rs.internal.model.DangerPatternListDTO;
+import gen.org.tkit.onecx.ai.management.bff.rs.internal.model.ProblemDetailResponseDTO;
 import gen.org.tkit.onecx.ai.management.bff.rs.internal.model.UpdateDangerPatternRequestDTO;
 import io.quarkiverse.mockserver.test.InjectMockServerClient;
 import io.quarkus.test.common.http.TestHTTPEndpoint;
@@ -40,7 +44,7 @@ class DangerPatternRestControllerTest extends AbstractTest {
     @InjectMockServerClient
     MockServerClient mockServerClient;
 
-    @jakarta.inject.Inject
+    @Inject
     DangerPatternRestController controller;
 
     KeycloakTestClient keycloakTestClient = new KeycloakTestClient();
@@ -487,11 +491,10 @@ class DangerPatternRestControllerTest extends AbstractTest {
 
     @Test
     void constraintException_delegatesToExceptionMapper() {
-        jakarta.validation.ConstraintViolationException ex = new jakarta.validation.ConstraintViolationException(
+        ConstraintViolationException ex = new ConstraintViolationException(
                 "validation failed", java.util.Set.of());
 
-        org.jboss.resteasy.reactive.RestResponse<gen.org.tkit.onecx.ai.management.bff.rs.internal.model.ProblemDetailResponseDTO> result = controller
-                .constraintException(ex);
+        RestResponse<ProblemDetailResponseDTO> result = controller.constraintException(ex);
 
         Assertions.assertEquals(Response.Status.BAD_REQUEST.getStatusCode(), result.getStatus());
         Assertions.assertNotNull(result.getEntity());
