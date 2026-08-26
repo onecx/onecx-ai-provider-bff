@@ -481,4 +481,20 @@ class DangerPatternRestControllerTest extends AbstractTest {
                 .then()
                 .statusCode(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode());
     }
+
+    @Test
+    void constraintException_delegatesToExceptionMapper() {
+        jakarta.inject.Instance<DangerPatternRestController> instance = io.quarkus.arc.Arc.container()
+                .instance(DangerPatternRestController.class);
+        DangerPatternRestController controller = instance.get();
+
+        jakarta.validation.ConstraintViolationException ex = new jakarta.validation.ConstraintViolationException(
+                "validation failed", java.util.Set.of());
+
+        org.jboss.resteasy.reactive.RestResponse<gen.org.tkit.onecx.ai.management.bff.rs.internal.model.ProblemDetailResponseDTO> result = controller
+                .constraintException(ex);
+
+        Assertions.assertEquals(Response.Status.BAD_REQUEST.getStatusCode(), result.getStatus());
+        Assertions.assertNotNull(result.getEntity());
+    }
 }
