@@ -40,6 +40,9 @@ class DangerPatternRestControllerTest extends AbstractTest {
     @InjectMockServerClient
     MockServerClient mockServerClient;
 
+    @jakarta.inject.Inject
+    DangerPatternRestController controller;
+
     KeycloakTestClient keycloakTestClient = new KeycloakTestClient();
     static final String MOCK_ID = "MOCK";
 
@@ -484,10 +487,6 @@ class DangerPatternRestControllerTest extends AbstractTest {
 
     @Test
     void constraintException_delegatesToExceptionMapper() {
-        var instance = io.quarkus.arc.Arc.container()
-                .instance(DangerPatternRestController.class);
-        DangerPatternRestController controller = instance.get();
-
         jakarta.validation.ConstraintViolationException ex = new jakarta.validation.ConstraintViolationException(
                 "validation failed", java.util.Set.of());
 
