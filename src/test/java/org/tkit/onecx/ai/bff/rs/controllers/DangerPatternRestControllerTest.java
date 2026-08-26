@@ -484,7 +484,7 @@ class DangerPatternRestControllerTest extends AbstractTest {
 
     @Test
     void constraintException_delegatesToExceptionMapper() {
-        jakarta.inject.Instance<DangerPatternRestController> instance = io.quarkus.arc.Arc.container()
+        var instance = io.quarkus.arc.Arc.container()
                 .instance(DangerPatternRestController.class);
         DangerPatternRestController controller = instance.get();
 
