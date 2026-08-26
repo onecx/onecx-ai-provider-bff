@@ -81,12 +81,15 @@ public class AgentRestController implements AgentApiService {
 
     @Override
     public Response getAgentMcpToolRules(String agentId, String toolId) {
+        Response.ResponseBuilder responseBuilder = null;
         try (Response response = agentInternalApi.getAgentMcpToolRules(agentId, toolId)) {
             if (response.getStatus() != Response.Status.OK.getStatusCode()) {
-                return Response.status(response.getStatus()).build();
+                responseBuilder = Response.status(response.getStatus());
+            } else {
+                var rules = response.readEntity(AgentMcpToolRuleListInternal.class);
+                responseBuilder = Response.ok(toolMapper.mapAgentRules(rules));
             }
-            var rules = response.readEntity(AgentMcpToolRuleListInternal.class);
-            return Response.ok(toolMapper.mapAgentRules(rules)).build();
+            return responseBuilder.build();
         }
     }
 
@@ -94,12 +97,15 @@ public class AgentRestController implements AgentApiService {
     public Response createAgentMcpToolRule(String agentId, String toolId,
             CreateAgentMcpToolRuleRequestDTO createAgentMcpToolRuleRequestDTO) {
         var request = toolMapper.mapCreateAgentRule(createAgentMcpToolRuleRequestDTO);
+        Response.ResponseBuilder responseBuilder = null;
         try (Response response = agentInternalApi.createAgentMcpToolRule(agentId, toolId, request)) {
             if (response.getStatus() != Response.Status.CREATED.getStatusCode()) {
-                return Response.status(response.getStatus()).build();
+                responseBuilder = Response.status(response.getStatus());
+            } else {
+                var rule = response.readEntity(AgentMcpToolRuleInternal.class);
+                responseBuilder = Response.status(Response.Status.CREATED).entity(toolMapper.mapAgentRule(rule));
             }
-            var rule = response.readEntity(AgentMcpToolRuleInternal.class);
-            return Response.status(Response.Status.CREATED).entity(toolMapper.mapAgentRule(rule)).build();
+            return responseBuilder.build();
         }
     }
 
@@ -107,12 +113,15 @@ public class AgentRestController implements AgentApiService {
     public Response updateAgentMcpToolRule(String agentId, String toolId, String ruleId,
             UpdateAgentMcpToolRuleRequestDTO updateAgentMcpToolRuleRequestDTO) {
         var request = toolMapper.mapUpdateAgentRule(updateAgentMcpToolRuleRequestDTO);
+        Response.ResponseBuilder responseBuilder = null;
         try (Response response = agentInternalApi.updateAgentMcpToolRule(agentId, toolId, ruleId, request)) {
             if (response.getStatus() != Response.Status.OK.getStatusCode()) {
-                return Response.status(response.getStatus()).build();
+                responseBuilder = Response.status(response.getStatus());
+            } else {
+                var rule = response.readEntity(AgentMcpToolRuleInternal.class);
+                responseBuilder = Response.ok(toolMapper.mapAgentRule(rule));
             }
-            var rule = response.readEntity(AgentMcpToolRuleInternal.class);
-            return Response.ok(toolMapper.mapAgentRule(rule)).build();
+            return responseBuilder.build();
         }
     }
 

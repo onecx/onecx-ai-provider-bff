@@ -39,36 +39,45 @@ public class DangerPatternRestController implements DangerPatternApiService {
 
     @Override
     public Response getDangerPatterns() {
+        Response.ResponseBuilder responseBuilder = null;
         try (Response response = dangerPatternInternalApi.getDangerPatterns()) {
             if (response.getStatus() != Response.Status.OK.getStatusCode()) {
-                return Response.status(response.getStatus()).build();
+                responseBuilder = Response.status(response.getStatus());
+            } else {
+                var patterns = response.readEntity(DangerPatternListInternal.class);
+                responseBuilder = Response.ok(toolMapper.mapPatterns(patterns));
             }
-            var patterns = response.readEntity(DangerPatternListInternal.class);
-            return Response.ok(toolMapper.mapPatterns(patterns)).build();
+            return responseBuilder.build();
         }
     }
 
     @Override
     public Response createDangerPattern(CreateDangerPatternRequestDTO createDangerPatternRequestDTO) {
         var request = toolMapper.mapCreatePattern(createDangerPatternRequestDTO);
+        Response.ResponseBuilder responseBuilder = null;
         try (Response response = dangerPatternInternalApi.createDangerPattern(request)) {
             if (response.getStatus() != Response.Status.CREATED.getStatusCode()) {
-                return Response.status(response.getStatus()).build();
+                responseBuilder = Response.status(response.getStatus());
+            } else {
+                var pattern = response.readEntity(DangerPatternInternal.class);
+                responseBuilder = Response.status(Response.Status.CREATED).entity(toolMapper.map(pattern));
             }
-            var pattern = response.readEntity(DangerPatternInternal.class);
-            return Response.status(Response.Status.CREATED).entity(toolMapper.map(pattern)).build();
+            return responseBuilder.build();
         }
     }
 
     @Override
     public Response updateDangerPattern(String id, UpdateDangerPatternRequestDTO updateDangerPatternRequestDTO) {
         var request = toolMapper.mapUpdatePattern(updateDangerPatternRequestDTO);
+        Response.ResponseBuilder responseBuilder = null;
         try (Response response = dangerPatternInternalApi.updateDangerPattern(id, request)) {
             if (response.getStatus() != Response.Status.OK.getStatusCode()) {
-                return Response.status(response.getStatus()).build();
+                responseBuilder = Response.status(response.getStatus());
+            } else {
+                var pattern = response.readEntity(DangerPatternInternal.class);
+                responseBuilder = Response.ok(toolMapper.map(pattern));
             }
-            var pattern = response.readEntity(DangerPatternInternal.class);
-            return Response.ok(toolMapper.map(pattern)).build();
+            return responseBuilder.build();
         }
     }
 
