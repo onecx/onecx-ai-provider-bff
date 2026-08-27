@@ -127,4 +127,126 @@ class DispatchRestControllerTest extends AbstractTest {
                 .then()
                 .statusCode(Response.Status.BAD_REQUEST.getStatusCode());
     }
+
+    @Test
+    void chatTest_withFullRequest_200() {
+        var message = new ChatMessageDTO();
+        message.setConversationId("conversation-1");
+        message.setType(ChatMessageDTO.TypeEnum.USER);
+        message.setMessage("hello");
+
+        var requestContext = new RequestContextDTO();
+        requestContext.setAgentId("agent-1");
+
+        var conversation = new ConversationDTO();
+        conversation.setConversationId("conversation-1");
+
+        var request = new ChatRequestDTO();
+        request.setChatMessage(message);
+        request.setRequestContext(requestContext);
+        request.setConversation(conversation);
+
+        ChatMessageInternal fakeData = new ChatMessageInternal()
+                .conversationId("conversation-1")
+                .type(ChatMessageInternal.TypeEnum.ASSISTANT)
+                .message("ok");
+
+        mockServerClient.when(
+                request().withPath("/internal/dispatch/chat")
+                        .withMethod(HttpMethod.POST))
+                .withPriority(100)
+                .withId(MOCK_ID)
+                .respond(httpRequest -> response()
+                        .withStatusCode(Response.Status.OK.getStatusCode())
+                        .withContentType(MediaType.APPLICATION_JSON)
+                        .withBody(JsonBody.json(fakeData)));
+
+        var response = given()
+                .when()
+                .auth().oauth2(keycloakTestClient.getAccessToken(ADMIN))
+                .header(APM_HEADER_PARAM, ADMIN)
+                .contentType(APPLICATION_JSON)
+                .body(request)
+                .post()
+                .then()
+                .statusCode(Response.Status.OK.getStatusCode())
+                .extract()
+                .as(ChatMessageDTO.class);
+
+        Assertions.assertNotNull(response);
+        Assertions.assertEquals(fakeData.getMessage(), response.getMessage());
+    }
+
+    @Test
+    void chatTest_500_returns400() {
+        var message = new ChatMessageDTO();
+        message.setConversationId("conversation-1");
+        message.setType(ChatMessageDTO.TypeEnum.USER);
+        message.setMessage("hello");
+
+        var request = new ChatRequestDTO();
+        request.setChatMessage(message);
+
+        mockServerClient.when(
+                request().withPath("/internal/dispatch/chat")
+                        .withMethod(HttpMethod.POST))
+                .withPriority(100)
+                .withId(MOCK_ID)
+                .respond(response()
+                        .withStatusCode(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode()));
+
+        // ExceptionMapper converts 500 from SVC to 400 for BFF clients
+        given()
+                .when()
+                .auth().oauth2(keycloakTestClient.getAccessToken(ADMIN))
+                .header(APM_HEADER_PARAM, ADMIN)
+                .contentType(APPLICATION_JSON)
+                .body(request)
+                .post()
+                .then()
+                .statusCode(Response.Status.BAD_REQUEST.getStatusCode());
+    }
+
+    @Test
+    void chatTest_201_withBody() {
+        // 201 is a 2xx code — REST client does NOT throw
+        // This covers the readEntity + return line for non-200 success
+        var message = new ChatMessageDTO();
+        message.setConversationId("conversation-1");
+        message.setType(ChatMessageDTO.TypeEnum.USER);
+        message.setMessage("hello");
+
+        var request = new ChatRequestDTO();
+        request.setChatMessage(message);
+
+        ChatMessageInternal fakeData = new ChatMessageInternal()
+                .conversationId("conversation-1")
+                .type(ChatMessageInternal.TypeEnum.ASSISTANT)
+                .message("ok");
+
+        mockServerClient.when(
+                request().withPath("/internal/dispatch/chat")
+                        .withMethod(HttpMethod.POST))
+                .withPriority(100)
+                .withId(MOCK_ID)
+                .respond(httpRequest -> response()
+                        .withStatusCode(Response.Status.CREATED.getStatusCode())
+                        .withContentType(MediaType.APPLICATION_JSON)
+                        .withBody(JsonBody.json(fakeData)));
+
+        var response = given()
+                .when()
+                .auth().oauth2(keycloakTestClient.getAccessToken(ADMIN))
+                .header(APM_HEADER_PARAM, ADMIN)
+                .contentType(APPLICATION_JSON)
+                .body(request)
+                .post()
+                .then()
+                .statusCode(Response.Status.CREATED.getStatusCode())
+                .extract()
+                .as(ChatMessageDTO.class);
+
+        Assertions.assertNotNull(response);
+        Assertions.assertEquals(fakeData.getMessage(), response.getMessage());
+    }
 }

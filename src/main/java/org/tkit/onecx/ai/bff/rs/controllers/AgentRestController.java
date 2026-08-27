@@ -12,6 +12,7 @@ import org.jboss.resteasy.reactive.RestResponse;
 import org.jboss.resteasy.reactive.server.ServerExceptionMapper;
 import org.tkit.onecx.ai.bff.rs.mappers.AgentMapper;
 import org.tkit.onecx.ai.bff.rs.mappers.ExceptionMapper;
+import org.tkit.onecx.ai.bff.rs.mappers.ToolMapper;
 import org.tkit.quarkus.log.cdi.LogService;
 
 import gen.org.tkit.onecx.ai.management.bff.client.api.AgentInternalApi;
@@ -29,6 +30,9 @@ public class AgentRestController implements AgentApiService {
 
     @Inject
     AgentMapper agentMapper;
+
+    @Inject
+    ToolMapper toolMapper;
 
     @Inject
     ExceptionMapper exceptionMapper;
@@ -72,6 +76,59 @@ public class AgentRestController implements AgentApiService {
         try (Response updateResponse = agentInternalApi.updateAgent(id, updateAgentRequest)) {
             var responseEntity = updateResponse.readEntity(AgentInternal.class);
             return Response.status(updateResponse.getStatus()).entity(agentMapper.map(responseEntity)).build();
+        }
+    }
+
+    @Override
+    public Response getAgentMcpToolRules(String agentId, String toolId) {
+        Response.ResponseBuilder responseBuilder = null;
+        try (Response response = agentInternalApi.getAgentMcpToolRules(agentId, toolId)) {
+            if (response.getStatus() != Response.Status.OK.getStatusCode()) {
+                responseBuilder = Response.status(response.getStatus());
+            } else {
+                var rules = response.readEntity(AgentMcpToolRuleListInternal.class);
+                responseBuilder = Response.ok(toolMapper.mapAgentRules(rules));
+            }
+            return responseBuilder.build();
+        }
+    }
+
+    @Override
+    public Response createAgentMcpToolRule(String agentId, String toolId,
+            CreateAgentMcpToolRuleRequestDTO createAgentMcpToolRuleRequestDTO) {
+        var request = toolMapper.mapCreateAgentRule(createAgentMcpToolRuleRequestDTO);
+        Response.ResponseBuilder responseBuilder = null;
+        try (Response response = agentInternalApi.createAgentMcpToolRule(agentId, toolId, request)) {
+            if (response.getStatus() != Response.Status.CREATED.getStatusCode()) {
+                responseBuilder = Response.status(response.getStatus());
+            } else {
+                var rule = response.readEntity(AgentMcpToolRuleInternal.class);
+                responseBuilder = Response.status(Response.Status.CREATED).entity(toolMapper.mapAgentRule(rule));
+            }
+            return responseBuilder.build();
+        }
+    }
+
+    @Override
+    public Response updateAgentMcpToolRule(String agentId, String toolId, String ruleId,
+            UpdateAgentMcpToolRuleRequestDTO updateAgentMcpToolRuleRequestDTO) {
+        var request = toolMapper.mapUpdateAgentRule(updateAgentMcpToolRuleRequestDTO);
+        Response.ResponseBuilder responseBuilder = null;
+        try (Response response = agentInternalApi.updateAgentMcpToolRule(agentId, toolId, ruleId, request)) {
+            if (response.getStatus() != Response.Status.OK.getStatusCode()) {
+                responseBuilder = Response.status(response.getStatus());
+            } else {
+                var rule = response.readEntity(AgentMcpToolRuleInternal.class);
+                responseBuilder = Response.ok(toolMapper.mapAgentRule(rule));
+            }
+            return responseBuilder.build();
+        }
+    }
+
+    @Override
+    public Response deleteAgentMcpToolRule(String agentId, String toolId, String ruleId) {
+        try (Response response = agentInternalApi.deleteAgentMcpToolRule(agentId, toolId, ruleId)) {
+            return Response.status(response.getStatus()).build();
         }
     }
 

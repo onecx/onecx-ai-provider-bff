@@ -75,6 +75,20 @@ public class ToolRestController implements ToolApiService {
         }
     }
 
+    @Override
+    public Response getDiscoveredTools(String toolId, String agentId) {
+        Response.ResponseBuilder responseBuilder = null;
+        try (Response response = toolInternalApi.getDiscoveredTools(toolId, agentId)) {
+            if (response.getStatus() != Response.Status.OK.getStatusCode()) {
+                responseBuilder = Response.status(response.getStatus());
+            } else {
+                var discovered = response.readEntity(DiscoveredToolInfoListInternal.class);
+                responseBuilder = Response.ok(toolMapper.mapDiscovered(discovered));
+            }
+            return responseBuilder.build();
+        }
+    }
+
     @ServerExceptionMapper
     public Response restException(ClientWebApplicationException ex) {
         return exceptionMapper.clientException(ex);
