@@ -1411,6 +1411,10 @@ components:
           type: string
         a2aEnabled:
           type: boolean
+        voiceEnabled:
+          type: boolean
+        languageCode:
+          type: string
         status:
           $ref: '#/components/schemas/AgentStatus'
         filter:
@@ -1439,6 +1443,10 @@ components:
           type: string
         a2aEnabled:
           type: boolean
+        voiceEnabled:
+          type: boolean
+        languageCode:
+          type: string
         status:
           $ref: '#/components/schemas/AgentStatus'
         filter:
@@ -1468,6 +1476,10 @@ components:
           type: string
         a2aEnabled:
           type: boolean
+        voiceEnabled:
+          type: boolean
+        languageCode:
+          type: string
         status:
           $ref: '#/components/schemas/AgentStatus'
         filter:
@@ -1500,6 +1512,10 @@ components:
           type: string
         a2aEnabled:
           type: boolean
+        voiceEnabled:
+          type: boolean
+        languageCode:
+          type: string
         status:
           $ref: '#/components/schemas/AgentStatus'
         filter:
@@ -2303,13 +2319,17 @@ components:
       type: string
       enum:
         - ALWAYS_ASK
+        - ALWAYS_ALLOW
         - NEVER_ASK
+        - ALLOW
     ToolPermission:
       type: string
       enum:
         - ALLOW
         - DENY
         - ALWAYS_ASK
+        - ALWAYS_ALLOW
+        - NEVER_ASK
     DangerLevel:
       type: string
       enum:
