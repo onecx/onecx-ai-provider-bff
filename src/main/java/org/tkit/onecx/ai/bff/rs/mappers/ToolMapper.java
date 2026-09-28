@@ -1,5 +1,7 @@
 package org.tkit.onecx.ai.bff.rs.mappers;
 
+import java.util.List;
+
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.tkit.quarkus.rs.mappers.OffsetDateTimeMapper;
@@ -28,7 +30,11 @@ public interface ToolMapper {
 
     CreateAgentMcpToolRuleRequestInternal mapCreateAgentRule(CreateAgentMcpToolRuleRequestDTO dto);
 
+    List<CreateAgentMcpToolRuleRequestInternal> mapCreateAgentRules(List<CreateAgentMcpToolRuleRequestDTO> dtos);
+
     UpdateAgentMcpToolRuleRequestInternal mapUpdateAgentRule(UpdateAgentMcpToolRuleRequestDTO dto);
+
+    List<UpdateAgentMcpToolRuleRequestInternal> mapUpdateAgentRules(List<UpdateAgentMcpToolRuleRequestDTO> dtos);
 
     @Mapping(target = "removeToolsItem", ignore = true)
     DiscoveredToolInfoListDTO mapDiscovered(DiscoveredToolInfoListInternal discovered);
