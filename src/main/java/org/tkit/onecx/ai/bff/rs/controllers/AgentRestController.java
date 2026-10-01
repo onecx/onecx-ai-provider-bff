@@ -1,5 +1,7 @@
 package org.tkit.onecx.ai.bff.rs.controllers;
 
+import java.util.List;
+
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
@@ -95,31 +97,31 @@ public class AgentRestController implements AgentApiService {
 
     @Override
     public Response createAgentMcpToolRule(String agentId, String toolId,
-            CreateAgentMcpToolRuleRequestDTO createAgentMcpToolRuleRequestDTO) {
-        var request = toolMapper.mapCreateAgentRule(createAgentMcpToolRuleRequestDTO);
+            List<CreateAgentMcpToolRuleRequestDTO> createAgentMcpToolRuleRequestDTOs) {
+        var request = toolMapper.mapCreateAgentRules(createAgentMcpToolRuleRequestDTOs);
         Response.ResponseBuilder responseBuilder = null;
         try (Response response = agentInternalApi.createAgentMcpToolRule(agentId, toolId, request)) {
             if (response.getStatus() != Response.Status.CREATED.getStatusCode()) {
                 responseBuilder = Response.status(response.getStatus());
             } else {
-                var rule = response.readEntity(AgentMcpToolRuleInternal.class);
-                responseBuilder = Response.status(Response.Status.CREATED).entity(toolMapper.mapAgentRule(rule));
+                var rules = response.readEntity(AgentMcpToolRuleListInternal.class);
+                responseBuilder = Response.status(Response.Status.CREATED).entity(toolMapper.mapAgentRules(rules));
             }
             return responseBuilder.build();
         }
     }
 
     @Override
-    public Response updateAgentMcpToolRule(String agentId, String toolId, String ruleId,
-            UpdateAgentMcpToolRuleRequestDTO updateAgentMcpToolRuleRequestDTO) {
-        var request = toolMapper.mapUpdateAgentRule(updateAgentMcpToolRuleRequestDTO);
+    public Response updateAgentMcpToolRule(String agentId, String toolId,
+            List<UpdateAgentMcpToolRuleRequestDTO> updateAgentMcpToolRuleRequestDTOs) {
+        var request = toolMapper.mapUpdateAgentRules(updateAgentMcpToolRuleRequestDTOs);
         Response.ResponseBuilder responseBuilder = null;
-        try (Response response = agentInternalApi.updateAgentMcpToolRule(agentId, toolId, ruleId, request)) {
+        try (Response response = agentInternalApi.updateAgentMcpToolRule(agentId, toolId, request)) {
             if (response.getStatus() != Response.Status.OK.getStatusCode()) {
                 responseBuilder = Response.status(response.getStatus());
             } else {
-                var rule = response.readEntity(AgentMcpToolRuleInternal.class);
-                responseBuilder = Response.ok(toolMapper.mapAgentRule(rule));
+                var rules = response.readEntity(AgentMcpToolRuleListInternal.class);
+                responseBuilder = Response.ok(toolMapper.mapAgentRules(rules));
             }
             return responseBuilder.build();
         }
