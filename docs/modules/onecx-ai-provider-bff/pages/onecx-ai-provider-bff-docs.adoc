@@ -15,7 +15,7 @@ quarkus.http.auth.permission.health.policy=permit
 quarkus.http.auth.permission.default.paths=/*
 quarkus.http.auth.permission.default.policy=authenticated
 onecx.permissions.application-id=${quarkus.application.name}
-org.eclipse.microprofile.rest.client.propagateHeaders=apm-principal-token
+org.eclipse.microprofile.rest.client.propagateHeaders=apm-principal-token,UserAuthorization
 quarkus.cache.caffeine.onecx-ai-provider.metrics-enabled=${onecx.ai.provider.health-check.cache-metrics-enabled}
 quarkus.cache.caffeine.onecx-ai-provider.expire-after-write=${onecx.ai.provider.health-check.cache-expire-after}
 %prod.quarkus.rest-client.onecx_ai_service.url=http://onecx-ai-provider-svc:8080
@@ -24,7 +24,7 @@ quarkus.openapi-generator.codegen.spec.ai_management_svc_internal_yaml.config-ke
 quarkus.openapi-generator.codegen.spec.ai_management_svc_internal_yaml.base-package=gen.org.tkit.onecx.ai.management.bff.client
 quarkus.openapi-generator.codegen.spec.ai_management_svc_internal_yaml.return-response=true
 quarkus.openapi-generator.codegen.spec.ai_management_svc_internal_yaml.model-name-suffix=Internal
-quarkus.openapi-generator.codegen.spec.ai_management_svc_internal_yaml.additional-api-type-annotations=@org.eclipse.microprofile.rest.client.annotation.RegisterClientHeaders;
+quarkus.openapi-generator.codegen.spec.ai_management_svc_internal_yaml.additional-api-type-annotations=@org.eclipse.microprofile.rest.client.annotation.RegisterClientHeaders(org.tkit.onecx.ai.bff.rs.headers.UserAuthorizationClientHeadersFactory.class);
 quarkus.openapi-generator.codegen.spec.ai_management_svc_internal_yaml.additional-model-type-annotations=@io.quarkus.runtime.annotations.RegisterForReflection;
 quarkus.openapi-generator.codegen.spec.ai_management_svc_internal_yaml.enable-security-generation=false
 %prod.quarkus.oidc-client.client-id=${quarkus.application.name}
