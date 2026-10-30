@@ -65,6 +65,32 @@ public class AgentRestController implements AgentApiService {
     }
 
     @Override
+    public Response createAgentConfigurationVersion(String id,
+            CreateAgentConfigurationVersionDTO createAgentConfigurationVersionDTO) {
+        var request = agentMapper.mapCreateConfigurationVersion(createAgentConfigurationVersionDTO);
+        try (Response response = agentInternalApi.createAgentConfigurationVersion(id, request)) {
+            var version = response.readEntity(AgentConfigurationVersionInternal.class);
+            return Response.status(response.getStatus()).entity(agentMapper.map(version)).build();
+        }
+    }
+
+    @Override
+    public Response getAgentConfigurationVersion(String id, String versionId) {
+        try (Response response = agentInternalApi.getAgentConfigurationVersion(id, versionId)) {
+            var configuration = response.readEntity(AgentConfigurationInternal.class);
+            return Response.status(response.getStatus()).entity(agentMapper.map(configuration)).build();
+        }
+    }
+
+    @Override
+    public Response activateAgentConfigurationVersion(String id, String versionId) {
+        try (Response response = agentInternalApi.activateAgentConfigurationVersion(id, versionId)) {
+            var version = response.readEntity(AgentConfigurationVersionInternal.class);
+            return Response.status(response.getStatus()).entity(agentMapper.map(version)).build();
+        }
+    }
+
+    @Override
     public Response getAgent(String id) {
         try (Response response = agentInternalApi.getAgent(id)) {
             AgentInternal agent = response.readEntity(AgentInternal.class);

@@ -693,4 +693,104 @@ class AgentRestControllerTest extends AbstractTest {
                 .then()
                 .statusCode(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode());
     }
+
+    @Test
+    void createAgentConfigurationVersionTest() {
+        String agentId = "a1";
+        CreateAgentConfigurationVersionInternal request = new CreateAgentConfigurationVersionInternal()
+                .name("baseline");
+        AgentConfigurationVersionInternal createdVersion = new AgentConfigurationVersionInternal()
+                .id("version-1")
+                .name("baseline")
+                .active(true);
+
+        mockServerClient.when(
+                request().withPath("/internal/agents/" + agentId + "/configuration/versions")
+                        .withMethod(HttpMethod.POST)
+                        .withBody(JsonBody.json(request)))
+                .withId(MOCK_ID)
+                .respond(httpRequest -> response()
+                        .withStatusCode(Response.Status.CREATED.getStatusCode())
+                        .withContentType(MediaType.APPLICATION_JSON)
+                        .withBody(JsonBody.json(createdVersion)));
+
+        var response = given()
+                .when()
+                .auth().oauth2(keycloakTestClient.getAccessToken(ADMIN))
+                .header(APM_HEADER_PARAM, ADMIN)
+                .contentType(APPLICATION_JSON)
+                .body(new CreateAgentConfigurationVersionDTO().name("baseline"))
+                .post(agentId + "/configuration/versions")
+                .then()
+                .statusCode(Response.Status.CREATED.getStatusCode())
+                .extract()
+                .as(AgentConfigurationVersionDTO.class);
+
+        Assertions.assertEquals("version-1", response.getId());
+        Assertions.assertEquals("baseline", response.getName());
+        Assertions.assertTrue(response.getActive());
+    }
+
+    @Test
+    void getAgentConfigurationVersionTest() {
+        String agentId = "a1";
+        String versionId = "version-1";
+        AgentConfigurationInternal configuration = new AgentConfigurationInternal().schemaVersion("1.0");
+
+        mockServerClient.when(
+                request().withPath("/internal/agents/" + agentId + "/configuration/versions/" + versionId)
+                        .withMethod(HttpMethod.GET))
+                .withId(MOCK_ID)
+                .respond(httpRequest -> response()
+                        .withStatusCode(Response.Status.OK.getStatusCode())
+                        .withContentType(MediaType.APPLICATION_JSON)
+                        .withBody(JsonBody.json(configuration)));
+
+        var result = given()
+                .when()
+                .auth().oauth2(keycloakTestClient.getAccessToken(ADMIN))
+                .header(APM_HEADER_PARAM, ADMIN)
+                .contentType(APPLICATION_JSON)
+                .get(agentId + "/configuration/versions/" + versionId)
+                .then()
+                .statusCode(Response.Status.OK.getStatusCode())
+                .extract()
+                .as(AgentConfigurationDTO.class);
+
+        Assertions.assertEquals("1.0", result.getSchemaVersion());
+    }
+
+    @Test
+    void activateAgentConfigurationVersionTest() {
+        String agentId = "a1";
+        String versionId = "version-1";
+        AgentConfigurationVersionInternal activatedVersion = new AgentConfigurationVersionInternal()
+                .id(versionId)
+                .name("baseline")
+                .active(true);
+
+        mockServerClient.when(
+                request().withPath("/internal/agents/" + agentId + "/configuration/versions/" + versionId + "/activate")
+                        .withMethod(HttpMethod.PUT))
+                .withId(MOCK_ID)
+                .respond(httpRequest -> response()
+                        .withStatusCode(Response.Status.OK.getStatusCode())
+                        .withContentType(MediaType.APPLICATION_JSON)
+                        .withBody(JsonBody.json(activatedVersion)));
+
+        var result = given()
+                .when()
+                .auth().oauth2(keycloakTestClient.getAccessToken(ADMIN))
+                .header(APM_HEADER_PARAM, ADMIN)
+                .contentType(APPLICATION_JSON)
+                .put(agentId + "/configuration/versions/" + versionId + "/activate")
+                .then()
+                .statusCode(Response.Status.OK.getStatusCode())
+                .extract()
+                .as(AgentConfigurationVersionDTO.class);
+
+        Assertions.assertEquals(versionId, result.getId());
+        Assertions.assertEquals("baseline", result.getName());
+        Assertions.assertTrue(result.getActive());
+    }
 }
