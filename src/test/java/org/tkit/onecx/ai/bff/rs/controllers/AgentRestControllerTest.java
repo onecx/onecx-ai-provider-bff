@@ -43,6 +43,8 @@ class AgentRestControllerTest extends AbstractTest {
     void resetMockserver() {
         try {
             mockServerClient.clear(MOCK_ID);
+            mockServerClient.clear(MOCK_ID + "-create");
+            mockServerClient.clear(MOCK_ID + "-activate");
         } catch (Exception _) {
             // mockId not existing
         }
@@ -230,6 +232,152 @@ class AgentRestControllerTest extends AbstractTest {
 
         Assertions.assertNotNull(response);
         Assertions.assertEquals(responseAgent.getName(), response.getName());
+    }
+
+    @Test
+    void publishAgentConfigurationVersion_createsAndActivatesVersion() {
+        String agentId = "1";
+        String versionId = "version-2";
+        var createRequest = new CreateAgentConfigurationVersionInternal().name("release-2");
+        var createdVersion = new AgentConfigurationVersionInternal()
+                .id(versionId)
+                .name("release-2")
+                .active(false);
+        var activatedVersion = new AgentConfigurationVersionInternal()
+                .id(versionId)
+                .name("release-2")
+                .active(true);
+
+        mockServerClient.when(
+                request().withPath("/internal/agents/" + agentId + "/configuration/versions")
+                        .withMethod(HttpMethod.POST)
+                        .withBody(JsonBody.json(java.util.Map.of("name", createRequest.getName()))))
+                .withId(MOCK_ID + "-create")
+                .respond(httpRequest -> response()
+                        .withStatusCode(Response.Status.CREATED.getStatusCode())
+                        .withContentType(MediaType.APPLICATION_JSON)
+                        .withBody(JsonBody.json(createdVersion)));
+        mockServerClient.when(
+                request().withPath("/internal/agents/" + agentId + "/configuration/versions/" + versionId + "/activate")
+                        .withMethod(HttpMethod.PUT))
+                .withId(MOCK_ID + "-activate")
+                .respond(httpRequest -> response()
+                        .withStatusCode(Response.Status.OK.getStatusCode())
+                        .withContentType(MediaType.APPLICATION_JSON)
+                        .withBody(JsonBody.json(activatedVersion)));
+
+        var requestDTO = new PublishAgentConfigurationVersionRequestDTO();
+        requestDTO.setName("release-2");
+
+        var publishedVersion = given()
+                .auth().oauth2(keycloakTestClient.getAccessToken(ADMIN))
+                .header(APM_HEADER_PARAM, ADMIN)
+                .contentType(APPLICATION_JSON)
+                .body(requestDTO)
+                .post(agentId + "/configuration/versions")
+                .then()
+                .statusCode(Response.Status.CREATED.getStatusCode())
+                .extract()
+                .as(AgentConfigurationVersionDTO.class);
+
+        Assertions.assertEquals(versionId, publishedVersion.getId());
+        Assertions.assertEquals("release-2", publishedVersion.getName());
+        Assertions.assertTrue(publishedVersion.getActive());
+    }
+
+    @Test
+    void publishAgentConfigurationVersion_preservesDuplicateNameProblem() {
+        String agentId = "1";
+        var duplicateProblem = java.util.Map.of(
+                "errorCode", "DUPLICATE_AGENT_CONFIGURATION_VERSION_NAME",
+                "detail", "Agent already has a configuration version named 'release-2'");
+
+        mockServerClient.when(
+                request().withPath("/internal/agents/" + agentId + "/configuration/versions")
+                        .withMethod(HttpMethod.POST))
+                .withId(MOCK_ID + "-create")
+                .respond(httpRequest -> response()
+                        .withStatusCode(Response.Status.BAD_REQUEST.getStatusCode())
+                        .withContentType(MediaType.APPLICATION_JSON)
+                        .withBody(JsonBody.json(duplicateProblem)));
+
+        var requestDTO = new PublishAgentConfigurationVersionRequestDTO();
+        requestDTO.setName("release-2");
+
+        var problem = given()
+                .auth().oauth2(keycloakTestClient.getAccessToken(ADMIN))
+                .header(APM_HEADER_PARAM, ADMIN)
+                .contentType(APPLICATION_JSON)
+                .body(requestDTO)
+                .post(agentId + "/configuration/versions")
+                .then()
+                .statusCode(Response.Status.BAD_REQUEST.getStatusCode())
+                .extract()
+                .as(ProblemDetailResponseDTO.class);
+
+        Assertions.assertEquals("DUPLICATE_AGENT_CONFIGURATION_VERSION_NAME", problem.getErrorCode());
+        Assertions.assertTrue(problem.getDetail().contains("release-2"));
+    }
+
+    @Test
+    void publishAgentConfigurationVersion_propagatesActivationFailure() {
+        String agentId = "1";
+        String versionId = "version-2";
+        var createdVersion = new AgentConfigurationVersionInternal()
+                .id(versionId)
+                .name("release-2")
+                .active(false);
+        var activationProblem = java.util.Map.of(
+                "errorCode", "INVALID_AGENT_CONFIGURATION_DEPENDENCIES",
+                "detail", "The configuration references an unavailable provider");
+
+        mockServerClient.when(
+                request().withPath("/internal/agents/" + agentId + "/configuration/versions")
+                        .withMethod(HttpMethod.POST))
+                .withId(MOCK_ID + "-create")
+                .respond(httpRequest -> response()
+                        .withStatusCode(Response.Status.CREATED.getStatusCode())
+                        .withContentType(MediaType.APPLICATION_JSON)
+                        .withBody(JsonBody.json(createdVersion)));
+        mockServerClient.when(
+                request().withPath("/internal/agents/" + agentId + "/configuration/versions/" + versionId + "/activate")
+                        .withMethod(HttpMethod.PUT))
+                .withId(MOCK_ID + "-activate")
+                .respond(httpRequest -> response()
+                        .withStatusCode(Response.Status.BAD_REQUEST.getStatusCode())
+                        .withContentType(MediaType.APPLICATION_JSON)
+                        .withBody(JsonBody.json(activationProblem)));
+
+        var requestDTO = new PublishAgentConfigurationVersionRequestDTO();
+        requestDTO.setName("release-2");
+
+        var problem = given()
+                .auth().oauth2(keycloakTestClient.getAccessToken(ADMIN))
+                .header(APM_HEADER_PARAM, ADMIN)
+                .contentType(APPLICATION_JSON)
+                .body(requestDTO)
+                .post(agentId + "/configuration/versions")
+                .then()
+                .statusCode(Response.Status.BAD_REQUEST.getStatusCode())
+                .extract()
+                .as(ProblemDetailResponseDTO.class);
+
+        Assertions.assertEquals("INVALID_AGENT_CONFIGURATION_DEPENDENCIES", problem.getErrorCode());
+    }
+
+    @Test
+    void publishAgentConfigurationVersion_requiresDedicatedPermission() {
+        var requestDTO = new PublishAgentConfigurationVersionRequestDTO();
+        requestDTO.setName("release-2");
+
+        given()
+                .auth().oauth2(keycloakTestClient.getAccessToken(USER))
+                .header(APM_HEADER_PARAM, USER)
+                .contentType(APPLICATION_JSON)
+                .body(requestDTO)
+                .post("1/configuration/versions")
+                .then()
+                .statusCode(Response.Status.FORBIDDEN.getStatusCode());
     }
 
     @Test

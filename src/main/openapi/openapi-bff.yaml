@@ -157,6 +157,44 @@ paths:
         "404":
           description: Agent not found
 
+  /agents/{id}/configuration/versions:
+    post:
+      x-onecx:
+        permissions:
+          agents:
+            - publish-configuration
+      tags:
+        - agent
+      description: Publish and activate a named version of the agent's current saved configuration
+      operationId: publishAgentConfigurationVersion
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PublishAgentConfigurationVersionRequest'
+      responses:
+        "201":
+          description: Configuration version published and activated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentConfigurationVersion'
+        "400":
+          description: Invalid configuration or duplicate version name
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetailResponse'
+        "404":
+          description: Agent not found
+
   /agents/search:
     post:
       x-onecx:
@@ -2487,6 +2525,30 @@ components:
         - DRAFT
         - LIVE
         - DEPRECATED
+    PublishAgentConfigurationVersionRequest:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 255
+          pattern: '.*\S.*'
+          description: Unique per agent and tenant after trimming leading and trailing whitespace. Case-sensitive.
+    AgentConfigurationVersion:
+      type: object
+      required:
+        - id
+        - name
+        - active
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        active:
+          type: boolean
     ProviderHealthStatus:
       type: object
       properties:
