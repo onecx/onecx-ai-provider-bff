@@ -6,7 +6,6 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import jakarta.validation.ConstraintViolationException;
-import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
 import org.eclipse.microprofile.rest.client.inject.RestClient;
@@ -89,25 +88,29 @@ public class AgentRestController implements AgentApiService {
                 .name(publishAgentConfigurationVersionRequestDTO.getName());
         try (Response createResponse = agentInternalApi.createAgentConfigurationVersion(id, createRequest)) {
             if (createResponse.getStatus() != Response.Status.CREATED.getStatusCode()) {
-                return forwardProblemResponse(createResponse);
+                return Response.status(createResponse.getStatus()).build();
             }
 
             var createdVersion = createResponse.readEntity(AgentConfigurationVersionInternal.class);
-            try (Response activationResponse = agentInternalApi.activateAgentConfigurationVersion(id, createdVersion.getId())) {
-                if (activationResponse.getStatus() != Response.Status.OK.getStatusCode()) {
-                    return forwardProblemResponse(activationResponse);
-                }
+            return activatePublishedConfigurationVersion(id, createdVersion);
+        }
+    }
 
-                var activatedVersion = activationResponse.readEntity(AgentConfigurationVersionInternal.class);
-                if (!Boolean.TRUE.equals(activatedVersion.getActive())) {
-                    return Response.serverError().build();
-                }
-                var responseVersion = new AgentConfigurationVersionDTO();
-                responseVersion.setId(activatedVersion.getId());
-                responseVersion.setName(activatedVersion.getName());
-                responseVersion.setActive(activatedVersion.getActive());
-                return Response.status(Response.Status.CREATED).entity(responseVersion).build();
+    private Response activatePublishedConfigurationVersion(String id, AgentConfigurationVersionInternal createdVersion) {
+        try (Response activationResponse = agentInternalApi.activateAgentConfigurationVersion(id, createdVersion.getId())) {
+            if (activationResponse.getStatus() != Response.Status.OK.getStatusCode()) {
+                return Response.status(activationResponse.getStatus()).build();
             }
+
+            var activatedVersion = activationResponse.readEntity(AgentConfigurationVersionInternal.class);
+            if (!Boolean.TRUE.equals(activatedVersion.getActive())) {
+                return Response.serverError().build();
+            }
+            var responseVersion = new AgentConfigurationVersionDTO();
+            responseVersion.setId(activatedVersion.getId());
+            responseVersion.setName(activatedVersion.getName());
+            responseVersion.setActive(activatedVersion.getActive());
+            return Response.status(Response.Status.CREATED).entity(responseVersion).build();
         }
     }
 
@@ -162,15 +165,6 @@ public class AgentRestController implements AgentApiService {
         try (Response response = agentInternalApi.deleteAgentMcpToolRule(agentId, toolId, ruleId)) {
             return Response.status(response.getStatus()).build();
         }
-    }
-
-    private Response forwardProblemResponse(Response downstreamResponse) {
-        var responseBuilder = Response.status(downstreamResponse.getStatus());
-        if (downstreamResponse.getMediaType() != null
-                && downstreamResponse.getMediaType().isCompatible(MediaType.APPLICATION_JSON_TYPE)) {
-            responseBuilder.entity(downstreamResponse.readEntity(ProblemDetailResponseInternal.class));
-        }
-        return responseBuilder.build();
     }
 
     @ServerExceptionMapper

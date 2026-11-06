@@ -2,6 +2,12 @@ package org.tkit.onecx.ai.bff.rs.controllers;
 
 import static io.restassured.RestAssured.given;
 import static jakarta.ws.rs.core.MediaType.APPLICATION_JSON;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
 
@@ -19,6 +25,7 @@ import org.mockserver.model.MediaType;
 import org.tkit.onecx.ai.bff.rs.AbstractTest;
 import org.tkit.quarkus.log.cdi.LogService;
 
+import gen.org.tkit.onecx.ai.management.bff.client.api.AgentInternalApi;
 // Client model classes (for MockServer responses)
 import gen.org.tkit.onecx.ai.management.bff.client.model.*;
 // BFF API DTOs (for RestAssured requests/responses)
@@ -363,6 +370,290 @@ class AgentRestControllerTest extends AbstractTest {
                 .as(ProblemDetailResponseDTO.class);
 
         Assertions.assertEquals("INVALID_AGENT_CONFIGURATION_DEPENDENCIES", problem.getErrorCode());
+    }
+
+    @Test
+    void publishAgentConfigurationVersion_doesNotActivateWhenCreateStatusIsUnexpected() {
+        mockServerClient.when(
+                request().withPath("/internal/agents/1/configuration/versions")
+                        .withMethod(HttpMethod.POST))
+                .withId(MOCK_ID + "-create")
+                .respond(httpRequest -> response()
+                        .withStatusCode(Response.Status.OK.getStatusCode())
+                        .withContentType(MediaType.TEXT_PLAIN)
+                        .withBody("unexpected create status"));
+
+        var requestDTO = new PublishAgentConfigurationVersionRequestDTO();
+        requestDTO.setName("release-2");
+
+        given()
+                .auth().oauth2(keycloakTestClient.getAccessToken(ADMIN))
+                .header(APM_HEADER_PARAM, ADMIN)
+                .contentType(APPLICATION_JSON)
+                .body(requestDTO)
+                .post("1/configuration/versions")
+                .then()
+                .statusCode(Response.Status.OK.getStatusCode());
+    }
+
+    @Test
+    void publishAgentConfigurationVersion_propagatesUnexpectedActivationStatus() {
+        String versionId = "version-2";
+        var createdVersion = new AgentConfigurationVersionInternal()
+                .id(versionId)
+                .name("release-2")
+                .active(false);
+        mockServerClient.when(
+                request().withPath("/internal/agents/1/configuration/versions")
+                        .withMethod(HttpMethod.POST))
+                .withId(MOCK_ID + "-create")
+                .respond(httpRequest -> response()
+                        .withStatusCode(Response.Status.CREATED.getStatusCode())
+                        .withContentType(MediaType.APPLICATION_JSON)
+                        .withBody(JsonBody.json(createdVersion)));
+        mockServerClient.when(
+                request().withPath("/internal/agents/1/configuration/versions/" + versionId + "/activate")
+                        .withMethod(HttpMethod.PUT))
+                .withId(MOCK_ID + "-activate")
+                .respond(httpRequest -> response()
+                        .withStatusCode(Response.Status.NO_CONTENT.getStatusCode()));
+
+        var requestDTO = new PublishAgentConfigurationVersionRequestDTO();
+        requestDTO.setName("release-2");
+
+        given()
+                .auth().oauth2(keycloakTestClient.getAccessToken(ADMIN))
+                .header(APM_HEADER_PARAM, ADMIN)
+                .contentType(APPLICATION_JSON)
+                .body(requestDTO)
+                .post("1/configuration/versions")
+                .then()
+                .statusCode(Response.Status.NO_CONTENT.getStatusCode());
+    }
+
+    @Test
+    void publishAgentConfigurationVersion_doesNotReportSuccessWhenActivationIsInactive() {
+        String versionId = "version-2";
+        var createdVersion = new AgentConfigurationVersionInternal()
+                .id(versionId)
+                .name("release-2")
+                .active(false);
+        mockServerClient.when(
+                request().withPath("/internal/agents/1/configuration/versions")
+                        .withMethod(HttpMethod.POST))
+                .withId(MOCK_ID + "-create")
+                .respond(httpRequest -> response()
+                        .withStatusCode(Response.Status.CREATED.getStatusCode())
+                        .withContentType(MediaType.APPLICATION_JSON)
+                        .withBody(JsonBody.json(createdVersion)));
+        mockServerClient.when(
+                request().withPath("/internal/agents/1/configuration/versions/" + versionId + "/activate")
+                        .withMethod(HttpMethod.PUT))
+                .withId(MOCK_ID + "-activate")
+                .respond(httpRequest -> response()
+                        .withStatusCode(Response.Status.OK.getStatusCode())
+                        .withContentType(MediaType.APPLICATION_JSON)
+                        .withBody(JsonBody.json(createdVersion)));
+
+        var requestDTO = new PublishAgentConfigurationVersionRequestDTO();
+        requestDTO.setName("release-2");
+
+        given()
+                .auth().oauth2(keycloakTestClient.getAccessToken(ADMIN))
+                .header(APM_HEADER_PARAM, ADMIN)
+                .contentType(APPLICATION_JSON)
+                .body(requestDTO)
+                .post("1/configuration/versions")
+                .then()
+                .statusCode(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode());
+    }
+
+    @Test
+    void publishAgentConfigurationVersion_closesBothResponses() {
+        var agentInternalApi = mock(AgentInternalApi.class);
+        var createResponse = mock(Response.class);
+        var activationResponse = mock(Response.class);
+        var version = new AgentConfigurationVersionInternal()
+                .id("version-2")
+                .name("release-2")
+                .active(true);
+        when(agentInternalApi.createAgentConfigurationVersion(eq("1"), any()))
+                .thenReturn(createResponse);
+        when(createResponse.getStatus()).thenReturn(Response.Status.CREATED.getStatusCode());
+        when(createResponse.readEntity(AgentConfigurationVersionInternal.class)).thenReturn(version);
+        when(agentInternalApi.activateAgentConfigurationVersion("1", "version-2")).thenReturn(activationResponse);
+        when(activationResponse.getStatus()).thenReturn(Response.Status.OK.getStatusCode());
+        when(activationResponse.readEntity(AgentConfigurationVersionInternal.class)).thenReturn(version);
+
+        var controller = new AgentRestController();
+        controller.agentInternalApi = agentInternalApi;
+        var requestDTO = new PublishAgentConfigurationVersionRequestDTO();
+        requestDTO.setName("release-2");
+
+        var response = controller.publishAgentConfigurationVersion("1", requestDTO);
+
+        Assertions.assertEquals(Response.Status.CREATED.getStatusCode(), response.getStatus());
+        verify(createResponse).close();
+        verify(activationResponse).close();
+    }
+
+    @Test
+    void publishAgentConfigurationVersion_handlesNullCreateResponse() {
+        var agentInternalApi = mock(AgentInternalApi.class);
+        when(agentInternalApi.createAgentConfigurationVersion(eq("1"), any())).thenReturn(null);
+
+        var controller = new AgentRestController();
+        controller.agentInternalApi = agentInternalApi;
+        var requestDTO = new PublishAgentConfigurationVersionRequestDTO();
+        requestDTO.setName("release-2");
+
+        Assertions.assertThrows(
+                NullPointerException.class, () -> controller.publishAgentConfigurationVersion("1", requestDTO));
+    }
+
+    @Test
+    void publishAgentConfigurationVersion_handlesNullActivationResponse() {
+        var agentInternalApi = mock(AgentInternalApi.class);
+        var createResponse = mock(Response.class);
+        var createdVersion = new AgentConfigurationVersionInternal()
+                .id("version-2")
+                .name("release-2")
+                .active(false);
+        when(agentInternalApi.createAgentConfigurationVersion(eq("1"), any())).thenReturn(createResponse);
+        when(createResponse.getStatus()).thenReturn(Response.Status.CREATED.getStatusCode());
+        when(createResponse.readEntity(AgentConfigurationVersionInternal.class)).thenReturn(createdVersion);
+        when(agentInternalApi.activateAgentConfigurationVersion("1", "version-2")).thenReturn(null);
+
+        var controller = new AgentRestController();
+        controller.agentInternalApi = agentInternalApi;
+        var requestDTO = new PublishAgentConfigurationVersionRequestDTO();
+        requestDTO.setName("release-2");
+
+        Assertions.assertThrows(
+                NullPointerException.class, () -> controller.publishAgentConfigurationVersion("1", requestDTO));
+        verify(createResponse).close();
+    }
+
+    @Test
+    void publishAgentConfigurationVersion_preservesReadFailureAndSuppressesCloseFailure() {
+        var agentInternalApi = mock(AgentInternalApi.class);
+        var createResponse = mock(Response.class);
+        var activationResponse = mock(Response.class);
+        var createdVersion = new AgentConfigurationVersionInternal()
+                .id("version-2")
+                .name("release-2")
+                .active(false);
+        var readFailure = new IllegalStateException("activation response could not be read");
+        var closeFailure = new IllegalStateException("activation response could not be closed");
+        when(agentInternalApi.createAgentConfigurationVersion(eq("1"), any()))
+                .thenReturn(createResponse);
+        when(createResponse.getStatus()).thenReturn(Response.Status.CREATED.getStatusCode());
+        when(createResponse.readEntity(AgentConfigurationVersionInternal.class)).thenReturn(createdVersion);
+        when(agentInternalApi.activateAgentConfigurationVersion("1", "version-2")).thenReturn(activationResponse);
+        when(activationResponse.getStatus()).thenReturn(Response.Status.OK.getStatusCode());
+        when(activationResponse.readEntity(AgentConfigurationVersionInternal.class)).thenThrow(readFailure);
+        doThrow(closeFailure).when(activationResponse).close();
+
+        var controller = new AgentRestController();
+        controller.agentInternalApi = agentInternalApi;
+        var requestDTO = new PublishAgentConfigurationVersionRequestDTO();
+        requestDTO.setName("release-2");
+
+        var thrown = Assertions.assertThrows(
+                IllegalStateException.class, () -> controller.publishAgentConfigurationVersion("1", requestDTO));
+
+        Assertions.assertSame(readFailure, thrown);
+        Assertions.assertArrayEquals(new Throwable[] { closeFailure }, thrown.getSuppressed());
+        verify(createResponse).close();
+        verify(activationResponse).close();
+    }
+
+    @Test
+    void publishAgentConfigurationVersion_suppressesCreateResponseCloseFailure() {
+        var agentInternalApi = mock(AgentInternalApi.class);
+        var createResponse = mock(Response.class);
+        var readFailure = new IllegalStateException("create response could not be read");
+        var closeFailure = new IllegalStateException("create response could not be closed");
+        when(agentInternalApi.createAgentConfigurationVersion(eq("1"), any())).thenReturn(createResponse);
+        when(createResponse.getStatus()).thenReturn(Response.Status.CREATED.getStatusCode());
+        when(createResponse.readEntity(AgentConfigurationVersionInternal.class)).thenThrow(readFailure);
+        doThrow(closeFailure).when(createResponse).close();
+
+        var controller = new AgentRestController();
+        controller.agentInternalApi = agentInternalApi;
+        var requestDTO = new PublishAgentConfigurationVersionRequestDTO();
+        requestDTO.setName("release-2");
+
+        var thrown = Assertions.assertThrows(
+                IllegalStateException.class, () -> controller.publishAgentConfigurationVersion("1", requestDTO));
+
+        Assertions.assertSame(readFailure, thrown);
+        Assertions.assertArrayEquals(new Throwable[] { closeFailure }, thrown.getSuppressed());
+        verify(createResponse).close();
+    }
+
+    @Test
+    void publishAgentConfigurationVersion_propagatesActivationResponseCloseFailure() {
+        var agentInternalApi = mock(AgentInternalApi.class);
+        var createResponse = mock(Response.class);
+        var activationResponse = mock(Response.class);
+        var version = new AgentConfigurationVersionInternal()
+                .id("version-2")
+                .name("release-2")
+                .active(true);
+        var closeFailure = new IllegalStateException("activation response could not be closed");
+        when(agentInternalApi.createAgentConfigurationVersion(eq("1"), any())).thenReturn(createResponse);
+        when(createResponse.getStatus()).thenReturn(Response.Status.CREATED.getStatusCode());
+        when(createResponse.readEntity(AgentConfigurationVersionInternal.class)).thenReturn(version);
+        when(agentInternalApi.activateAgentConfigurationVersion("1", "version-2")).thenReturn(activationResponse);
+        when(activationResponse.getStatus()).thenReturn(Response.Status.OK.getStatusCode());
+        when(activationResponse.readEntity(AgentConfigurationVersionInternal.class)).thenReturn(version);
+        doThrow(closeFailure).when(activationResponse).close();
+
+        var controller = new AgentRestController();
+        controller.agentInternalApi = agentInternalApi;
+        var requestDTO = new PublishAgentConfigurationVersionRequestDTO();
+        requestDTO.setName("release-2");
+
+        Assertions.assertSame(
+                closeFailure,
+                Assertions.assertThrows(
+                        IllegalStateException.class,
+                        () -> controller.publishAgentConfigurationVersion("1", requestDTO)));
+        verify(createResponse).close();
+        verify(activationResponse).close();
+    }
+
+    @Test
+    void publishAgentConfigurationVersion_propagatesCreateResponseCloseFailure() {
+        var agentInternalApi = mock(AgentInternalApi.class);
+        var createResponse = mock(Response.class);
+        var activationResponse = mock(Response.class);
+        var version = new AgentConfigurationVersionInternal()
+                .id("version-2")
+                .name("release-2")
+                .active(true);
+        var closeFailure = new IllegalStateException("create response could not be closed");
+        when(agentInternalApi.createAgentConfigurationVersion(eq("1"), any())).thenReturn(createResponse);
+        when(createResponse.getStatus()).thenReturn(Response.Status.CREATED.getStatusCode());
+        when(createResponse.readEntity(AgentConfigurationVersionInternal.class)).thenReturn(version);
+        when(agentInternalApi.activateAgentConfigurationVersion("1", "version-2")).thenReturn(activationResponse);
+        when(activationResponse.getStatus()).thenReturn(Response.Status.OK.getStatusCode());
+        when(activationResponse.readEntity(AgentConfigurationVersionInternal.class)).thenReturn(version);
+        doThrow(closeFailure).when(createResponse).close();
+
+        var controller = new AgentRestController();
+        controller.agentInternalApi = agentInternalApi;
+        var requestDTO = new PublishAgentConfigurationVersionRequestDTO();
+        requestDTO.setName("release-2");
+
+        Assertions.assertSame(
+                closeFailure,
+                Assertions.assertThrows(
+                        IllegalStateException.class,
+                        () -> controller.publishAgentConfigurationVersion("1", requestDTO)));
+        verify(createResponse).close();
+        verify(activationResponse).close();
     }
 
     @Test
