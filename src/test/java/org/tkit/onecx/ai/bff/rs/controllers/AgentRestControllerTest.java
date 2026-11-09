@@ -535,7 +535,7 @@ class AgentRestControllerTest extends AbstractTest {
     }
 
     @Test
-    void publishAgentConfigurationVersion_preservesReadFailureAndSuppressesCloseFailure() {
+    void publishAgentConfigurationVersion_propagatesCloseFailureWhenReadAlsoFails() {
         var agentInternalApi = mock(AgentInternalApi.class);
         var createResponse = mock(Response.class);
         var activationResponse = mock(Response.class);
@@ -562,14 +562,14 @@ class AgentRestControllerTest extends AbstractTest {
         var thrown = Assertions.assertThrows(
                 IllegalStateException.class, () -> controller.publishAgentConfigurationVersion("1", requestDTO));
 
-        Assertions.assertSame(readFailure, thrown);
-        Assertions.assertArrayEquals(new Throwable[] { closeFailure }, thrown.getSuppressed());
+        Assertions.assertSame(closeFailure, thrown);
+        Assertions.assertEquals(0, thrown.getSuppressed().length);
         verify(createResponse).close();
         verify(activationResponse).close();
     }
 
     @Test
-    void publishAgentConfigurationVersion_suppressesCreateResponseCloseFailure() {
+    void publishAgentConfigurationVersion_propagatesCreateCloseFailureWhenCreateReadAlsoFails() {
         var agentInternalApi = mock(AgentInternalApi.class);
         var createResponse = mock(Response.class);
         var readFailure = new IllegalStateException("create response could not be read");
@@ -587,8 +587,8 @@ class AgentRestControllerTest extends AbstractTest {
         var thrown = Assertions.assertThrows(
                 IllegalStateException.class, () -> controller.publishAgentConfigurationVersion("1", requestDTO));
 
-        Assertions.assertSame(readFailure, thrown);
-        Assertions.assertArrayEquals(new Throwable[] { closeFailure }, thrown.getSuppressed());
+        Assertions.assertSame(closeFailure, thrown);
+        Assertions.assertEquals(0, thrown.getSuppressed().length);
         verify(createResponse).close();
     }
 

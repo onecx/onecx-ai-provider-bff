@@ -86,18 +86,26 @@ public class AgentRestController implements AgentApiService {
             String id, PublishAgentConfigurationVersionRequestDTO publishAgentConfigurationVersionRequestDTO) {
         var createRequest = new CreateAgentConfigurationVersionInternal()
                 .name(publishAgentConfigurationVersionRequestDTO.getName());
-        try (Response createResponse = agentInternalApi.createAgentConfigurationVersion(id, createRequest)) {
+        Response createResponse = null;
+        try {
+            createResponse = agentInternalApi.createAgentConfigurationVersion(id, createRequest);
             if (createResponse.getStatus() != Response.Status.CREATED.getStatusCode()) {
                 return Response.status(createResponse.getStatus()).build();
             }
 
             var createdVersion = createResponse.readEntity(AgentConfigurationVersionInternal.class);
             return activatePublishedConfigurationVersion(id, createdVersion);
+        } finally {
+            if (createResponse != null) {
+                createResponse.close();
+            }
         }
     }
 
     private Response activatePublishedConfigurationVersion(String id, AgentConfigurationVersionInternal createdVersion) {
-        try (Response activationResponse = agentInternalApi.activateAgentConfigurationVersion(id, createdVersion.getId())) {
+        Response activationResponse = null;
+        try {
+            activationResponse = agentInternalApi.activateAgentConfigurationVersion(id, createdVersion.getId());
             if (activationResponse.getStatus() != Response.Status.OK.getStatusCode()) {
                 return Response.status(activationResponse.getStatus()).build();
             }
@@ -111,6 +119,10 @@ public class AgentRestController implements AgentApiService {
             responseVersion.setName(activatedVersion.getName());
             responseVersion.setActive(activatedVersion.getActive());
             return Response.status(Response.Status.CREATED).entity(responseVersion).build();
+        } finally {
+            if (activationResponse != null) {
+                activationResponse.close();
+            }
         }
     }
 
