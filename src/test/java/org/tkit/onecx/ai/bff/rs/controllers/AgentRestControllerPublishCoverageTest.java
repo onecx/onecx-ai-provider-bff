@@ -401,6 +401,29 @@ class AgentRestControllerPublishCoverageTest extends AbstractTest {
                 .statusCode(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode());
     }
 
+    @Test
+    void createRequiresWritePermission() {
+        given()
+                .auth().oauth2(keycloakTestClient.getAccessToken(USER))
+                .header(APM_HEADER_PARAM, USER)
+                .contentType(APPLICATION_JSON)
+                .body(request())
+                .post("1/configuration/versions")
+                .then()
+                .statusCode(Response.Status.FORBIDDEN.getStatusCode());
+    }
+
+    @Test
+    void activateRequiresWritePermission() {
+        given()
+                .auth().oauth2(keycloakTestClient.getAccessToken(USER))
+                .header(APM_HEADER_PARAM, USER)
+                .contentType(APPLICATION_JSON)
+                .put("1/configuration/versions/version-2/activate")
+                .then()
+                .statusCode(Response.Status.FORBIDDEN.getStatusCode());
+    }
+
     private void activateAndExpectInternalServerError() {
         given()
                 .auth().oauth2(keycloakTestClient.getAccessToken(ADMIN))
