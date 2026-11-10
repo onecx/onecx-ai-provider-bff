@@ -131,13 +131,14 @@ class ModelRestControllerTest extends AbstractTest {
         CreateModelRequestInternal createRequest = new CreateModelRequestInternal();
         createRequest.setName("New Model");
         createRequest.setModelIdentifier("llama2");
-        createRequest.setModelConfig("{}");
+        createRequest.setModelConfig("{\"api\":\"responses\",\"reasoningEffort\":\"medium\"}");
         createRequest.setCommunicationMode(CommunicationModeInternal.ASYNC);
         createRequest.setProvider(new ProviderInternal().name("provider1"));
 
         ModelInternal responseModel = new ModelInternal();
         responseModel.setId("new-id");
         responseModel.setName("New Model");
+        responseModel.setModelConfig(createRequest.getModelConfig());
 
         mockServerClient.when(
                 request().withPath("/internal/models")
@@ -152,7 +153,7 @@ class ModelRestControllerTest extends AbstractTest {
         CreateModelRequestDTO createDTO = new CreateModelRequestDTO();
         createDTO.setName("New Model");
         createDTO.setModelIdentifier("llama2");
-        createDTO.setModelConfig("{}");
+        createDTO.setModelConfig(createRequest.getModelConfig());
         createDTO.setCommunicationMode(CommunicationModeDTO.ASYNC);
         ProviderDTO providerDTO = new ProviderDTO();
         providerDTO.setName("provider1");
@@ -172,6 +173,7 @@ class ModelRestControllerTest extends AbstractTest {
 
         Assertions.assertNotNull(response);
         Assertions.assertEquals(responseModel.getName(), response.getName());
+        Assertions.assertEquals(createRequest.getModelConfig(), response.getModelConfig());
     }
 
     @Test
@@ -179,11 +181,13 @@ class ModelRestControllerTest extends AbstractTest {
         UpdateModelRequestInternal updateRequest = new UpdateModelRequestInternal();
         updateRequest.setName("Updated Model");
         updateRequest.setModelIdentifier("llama3");
+        updateRequest.setModelConfig("{\"api\":\"chat-completions\",\"reasoningEffort\":\"  \"}");
         updateRequest.setModificationCount(0);
 
         ModelInternal responseModel = new ModelInternal();
         responseModel.setId("1");
         responseModel.setName("Updated Model");
+        responseModel.setModelConfig(updateRequest.getModelConfig());
 
         String testId = "1";
         mockServerClient.when(
@@ -199,6 +203,7 @@ class ModelRestControllerTest extends AbstractTest {
         UpdateModelRequestDTO updateDTO = new UpdateModelRequestDTO();
         updateDTO.setName("Updated Model");
         updateDTO.setModelIdentifier("llama3");
+        updateDTO.setModelConfig(updateRequest.getModelConfig());
         updateDTO.setModificationCount(0);
 
         var response = given()
@@ -215,6 +220,36 @@ class ModelRestControllerTest extends AbstractTest {
 
         Assertions.assertNotNull(response);
         Assertions.assertEquals(responseModel.getName(), response.getName());
+        Assertions.assertEquals(updateRequest.getModelConfig(), response.getModelConfig());
+    }
+
+    @Test
+    void createModel_PropagatesServiceValidationProblemDetail() {
+        mockServerClient.when(
+                request().withPath("/internal/models")
+                        .withMethod(HttpMethod.POST))
+                .withId(MOCK_ID)
+                .respond(httpRequest -> response()
+                        .withStatusCode(Response.Status.BAD_REQUEST.getStatusCode())
+                        .withContentType(MediaType.APPLICATION_JSON)
+                        .withBody(JsonBody.json(
+                                "{\"errorCode\":\"INVALID_MODEL_CONFIG\",\"detail\":\"modelConfig must be a JSON object\"}")));
+
+        var dto = new CreateModelRequestDTO();
+        dto.setModelConfig("{");
+
+        var problem = given()
+                .auth().oauth2(keycloakTestClient.getAccessToken(ADMIN))
+                .header(APM_HEADER_PARAM, ADMIN)
+                .contentType(APPLICATION_JSON)
+                .body(dto)
+                .post()
+                .then()
+                .statusCode(Response.Status.BAD_REQUEST.getStatusCode())
+                .extract().as(ProblemDetailResponseDTO.class);
+
+        Assertions.assertEquals("INVALID_MODEL_CONFIG", problem.getErrorCode());
+        Assertions.assertEquals("modelConfig must be a JSON object", problem.getDetail());
     }
 
     @Test
