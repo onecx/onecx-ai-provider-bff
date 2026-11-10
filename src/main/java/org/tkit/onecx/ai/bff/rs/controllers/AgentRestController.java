@@ -1,7 +1,7 @@
 package org.tkit.onecx.ai.bff.rs.controllers;
 
 import java.util.List;
-import java.util.function.Function;
+import java.util.function.UnaryOperator;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -108,7 +108,7 @@ public class AgentRestController implements AgentApiService {
      * Runs the handler on the upstream response and always closes it. Used instead of try-with-resources, which
      * javac instruments with an extra null check on the close path that cannot be reached by tests.
      */
-    private static Response consume(Response response, Function<Response, Response> handler) {
+    private static Response consume(Response response, UnaryOperator<Response> handler) {
         try {
             return handler.apply(response);
         } finally {
