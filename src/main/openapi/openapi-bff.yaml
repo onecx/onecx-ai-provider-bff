@@ -158,15 +158,39 @@ paths:
           description: Agent not found
 
   /agents/{id}/configuration/versions:
+    get:
+      x-onecx:
+        permissions:
+          agents:
+            - read
+      tags:
+        - agent
+      description: List all saved configuration versions for an agent
+      operationId: getAgentConfigurationVersions
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of configuration versions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentConfigurationVersionList'
+        "404":
+          description: Agent not found
     post:
       x-onecx:
         permissions:
           agents:
-            - publish-configuration
+            - write
       tags:
         - agent
-      description: Publish and activate a named version of the agent's current saved configuration
-      operationId: publishAgentConfigurationVersion
+      description: Save an immutable version of the currently resolved configuration.
+      operationId: createAgentConfigurationVersion
       parameters:
         - name: id
           in: path
@@ -178,22 +202,94 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/PublishAgentConfigurationVersionRequest'
+              $ref: '#/components/schemas/CreateAgentConfigurationVersion'
       responses:
         "201":
-          description: Configuration version published and activated
+          description: Immutable version created
+          headers:
+            Location:
+              schema:
+                type: string
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/AgentConfigurationVersion'
         "400":
-          description: Invalid configuration or duplicate version name
+          description: Invalid name, duplicate version name, or invalid configuration dependencies
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ProblemDetailResponse'
         "404":
           description: Agent not found
+
+  /agents/{id}/configuration/versions/{versionId}:
+    get:
+      x-onecx:
+        permissions:
+          agents:
+            - read
+      tags:
+        - agent
+      description: Get a saved configuration by its stable identifier, independent of the active version.
+      operationId: getAgentConfigurationVersion
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: versionId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Saved configuration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentConfiguration'
+        "404":
+          description: Agent or version not found
+
+  /agents/{id}/configuration/versions/{versionId}/activate:
+    put:
+      x-onecx:
+        permissions:
+          agents:
+            - write
+      tags:
+        - agent
+      description: Make a saved version active without changing its identifier or content.
+      operationId: activateAgentConfigurationVersion
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: versionId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Version activated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentConfigurationVersion'
+        "400":
+          description: Invalid configuration dependencies
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetailResponse'
+        "404":
+          description: Agent or version not found
 
   /agents/search:
     post:
@@ -1609,6 +1705,181 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/AgentAbstract'
+    CreateAgentConfigurationVersion:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+          description: Unique per agent and tenant after trimming leading and trailing whitespace. Case-sensitive.
+          minLength: 1
+          maxLength: 255
+          pattern: '.*\S.*'
+    AgentConfiguration:
+      type: object
+      required:
+        - schemaVersion
+      properties:
+        schemaVersion:
+          type: string
+        context:
+          $ref: "#/components/schemas/Context"
+        agent:
+          $ref: "#/components/schemas/AgentConfigurationAgent"
+        voice:
+          $ref: "#/components/schemas/VoiceSettings"
+        provider:
+          $ref: "#/components/schemas/ProviderConfiguration"
+        model:
+          $ref: "#/components/schemas/ModelConfiguration"
+        scaffold:
+          $ref: "#/components/schemas/ScaffoldConfiguration"
+        skills:
+          type: array
+          items:
+            $ref: "#/components/schemas/SkillConfiguration"
+        mcpServers:
+          type: array
+          items:
+            $ref: "#/components/schemas/McpServerConfiguration"
+    Context:
+      type: object
+      properties:
+        tenantId:
+          type: string
+        principal:
+          type: string
+    AgentConfigurationAgent:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+    VoiceSettings:
+      type: object
+      properties:
+        voiceEnabled:
+          type: boolean
+        languageCode:
+          type: string
+    ProviderConfiguration:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        type:
+          type: string
+        description:
+          type: string
+        llmUrl:
+          type: string
+        authMode:
+          type: string
+        credentialRef:
+          type: string
+    ModelConfiguration:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        modelIdentifier:
+          type: string
+        modelConfig:
+          type: string
+        communicationMode:
+          type: string
+    ScaffoldConfiguration:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        systemPrompt:
+          type: string
+    SkillConfiguration:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        instruction:
+          type: string
+        position:
+          type: integer
+          format: int32
+        source:
+          type: string
+          enum: [ TENANT, GLOBAL ]
+    McpServerConfiguration:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        url:
+          type: string
+        credentialRef:
+          type: string
+        unlistedToolPermission:
+          type: string
+          enum: [ DENY, ALWAYS_ASK, ALWAYS_ALLOW ]
+        unlistedToolPermissionSource:
+          type: string
+          enum: [ AGENT_TOOL_RULE, TOOL_EXECUTION_POLICY, SYSTEM_DEFAULT ]
+        toolRules:
+          type: array
+          items:
+            $ref: "#/components/schemas/ToolRuleConfiguration"
+    ToolRuleConfiguration:
+      type: object
+      properties:
+        toolName:
+          type: string
+        description:
+          type: string
+        permission:
+          type: string
+          enum: [ DENY, ALWAYS_ASK, ALWAYS_ALLOW ]
+        policySource:
+          type: string
+          enum: [ AGENT_TOOL_RULE, TOOL_EXECUTION_POLICY, SYSTEM_DEFAULT ]
+    AgentConfigurationVersion:
+      type: object
+      required:
+        - id
+        - name
+        - active
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        active:
+          type: boolean
+    AgentConfigurationVersionList:
+      type: object
+      required:
+        - versions
+      properties:
+        versions:
+          type: array
+          items:
+            $ref: '#/components/schemas/AgentConfigurationVersion'
 
     Tool:
       type: object
@@ -2525,30 +2796,6 @@ components:
         - DRAFT
         - LIVE
         - DEPRECATED
-    PublishAgentConfigurationVersionRequest:
-      type: object
-      required:
-        - name
-      properties:
-        name:
-          type: string
-          minLength: 1
-          maxLength: 255
-          pattern: '.*\S.*'
-          description: Unique per agent and tenant after trimming leading and trailing whitespace. Case-sensitive.
-    AgentConfigurationVersion:
-      type: object
-      required:
-        - id
-        - name
-        - active
-      properties:
-        id:
-          type: string
-        name:
-          type: string
-        active:
-          type: boolean
     ProviderHealthStatus:
       type: object
       properties:

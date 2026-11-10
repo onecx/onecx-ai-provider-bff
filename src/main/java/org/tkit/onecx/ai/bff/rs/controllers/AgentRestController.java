@@ -6,6 +6,7 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import jakarta.validation.ConstraintViolationException;
+import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
 import org.eclipse.microprofile.rest.client.inject.RestClient;
@@ -43,6 +44,9 @@ public class AgentRestController implements AgentApiService {
     public Response createAgent(CreateAgentRequestDTO createAgentRequestDTO) {
         CreateAgentRequestInternal createAgentRequest = agentMapper.mapCreate(createAgentRequestDTO);
         try (Response createResponse = agentInternalApi.createAgent(createAgentRequest)) {
+            if (createResponse.getStatus() >= Response.Status.BAD_REQUEST.getStatusCode()) {
+                return passThroughError(createResponse);
+            }
             var createdAgent = createResponse.readEntity(AgentInternal.class);
             return Response.status(createResponse.getStatus()).entity(agentMapper.map(createdAgent)).build();
         }
@@ -65,6 +69,62 @@ public class AgentRestController implements AgentApiService {
     }
 
     @Override
+    public Response createAgentConfigurationVersion(String id,
+            CreateAgentConfigurationVersionDTO createAgentConfigurationVersionDTO) {
+        var request = agentMapper.mapCreateConfigurationVersion(createAgentConfigurationVersionDTO);
+        try (Response response = agentInternalApi.createAgentConfigurationVersion(id, request)) {
+            if (response.getStatus() >= Response.Status.BAD_REQUEST.getStatusCode()) {
+                return passThroughError(response);
+            }
+            var version = response.readEntity(AgentConfigurationVersionInternal.class);
+            return Response.status(response.getStatus()).entity(agentMapper.map(version)).build();
+        }
+    }
+
+    @Override
+    public Response getAgentConfigurationVersion(String id, String versionId) {
+        try (Response response = agentInternalApi.getAgentConfigurationVersion(id, versionId)) {
+            if (response.getStatus() >= Response.Status.BAD_REQUEST.getStatusCode()) {
+                return passThroughError(response);
+            }
+            var configuration = response.readEntity(AgentConfigurationInternal.class);
+            return Response.status(response.getStatus()).entity(agentMapper.map(configuration)).build();
+        }
+    }
+
+    @Override
+    public Response activateAgentConfigurationVersion(String id, String versionId) {
+        try (Response response = agentInternalApi.activateAgentConfigurationVersion(id, versionId)) {
+            if (response.getStatus() >= Response.Status.BAD_REQUEST.getStatusCode()) {
+                return passThroughError(response);
+            }
+            var version = response.readEntity(AgentConfigurationVersionInternal.class);
+            return Response.status(response.getStatus()).entity(agentMapper.map(version)).build();
+        }
+    }
+
+    private static Response passThroughError(Response response) {
+        var body = response.readEntity(String.class);
+        return Response.status(response.getStatus()).type(MediaType.APPLICATION_JSON).entity(body).build();
+    }
+
+    @Override
+    public Response getAgentConfigurationVersions(String id) {
+        try (Response response = agentInternalApi.getAgentConfigurationVersions(id)) {
+            if (response.getStatus() >= Response.Status.BAD_REQUEST.getStatusCode()) {
+                return passThroughError(response);
+            }
+            var internalList = response.readEntity(AgentConfigurationVersionListInternal.class);
+            var result = new AgentConfigurationVersionListDTO();
+            var versions = internalList.getVersions();
+            result.setVersions(versions != null
+                    ? versions.stream().map(agentMapper::map).toList()
+                    : List.of());
+            return Response.ok(result).build();
+        }
+    }
+
+    @Override
     public Response getAgent(String id) {
         try (Response response = agentInternalApi.getAgent(id)) {
             AgentInternal agent = response.readEntity(AgentInternal.class);
@@ -78,51 +138,6 @@ public class AgentRestController implements AgentApiService {
         try (Response updateResponse = agentInternalApi.updateAgent(id, updateAgentRequest)) {
             var responseEntity = updateResponse.readEntity(AgentInternal.class);
             return Response.status(updateResponse.getStatus()).entity(agentMapper.map(responseEntity)).build();
-        }
-    }
-
-    @Override
-    public Response publishAgentConfigurationVersion(
-            String id, PublishAgentConfigurationVersionRequestDTO publishAgentConfigurationVersionRequestDTO) {
-        var createRequest = new CreateAgentConfigurationVersionInternal()
-                .name(publishAgentConfigurationVersionRequestDTO.getName());
-        Response createResponse = null;
-        try {
-            createResponse = agentInternalApi.createAgentConfigurationVersion(id, createRequest);
-            if (createResponse.getStatus() != Response.Status.CREATED.getStatusCode()) {
-                return Response.status(createResponse.getStatus()).build();
-            }
-
-            var createdVersion = createResponse.readEntity(AgentConfigurationVersionInternal.class);
-            return activatePublishedConfigurationVersion(id, createdVersion);
-        } finally {
-            if (createResponse != null) {
-                createResponse.close();
-            }
-        }
-    }
-
-    private Response activatePublishedConfigurationVersion(String id, AgentConfigurationVersionInternal createdVersion) {
-        Response activationResponse = null;
-        try {
-            activationResponse = agentInternalApi.activateAgentConfigurationVersion(id, createdVersion.getId());
-            if (activationResponse.getStatus() != Response.Status.OK.getStatusCode()) {
-                return Response.status(activationResponse.getStatus()).build();
-            }
-
-            var activatedVersion = activationResponse.readEntity(AgentConfigurationVersionInternal.class);
-            if (!Boolean.TRUE.equals(activatedVersion.getActive())) {
-                return Response.serverError().build();
-            }
-            var responseVersion = new AgentConfigurationVersionDTO();
-            responseVersion.setId(activatedVersion.getId());
-            responseVersion.setName(activatedVersion.getName());
-            responseVersion.setActive(activatedVersion.getActive());
-            return Response.status(Response.Status.CREATED).entity(responseVersion).build();
-        } finally {
-            if (activationResponse != null) {
-                activationResponse.close();
-            }
         }
     }
 

@@ -67,7 +67,6 @@ app:
             write: permission on PUT, POST, PATCH requests, where objects are saved or updated
             delete: permission on all DELETE requests
             dispatch: permission to dispatch tasks or chat messages to agents
-            publish-configuration: permission to publish and activate agent configuration versions
           tools:
             read: permission on all GET requests and POST search
             write: permission on PUT, POST, PATCH requests, where objects are saved or updated
