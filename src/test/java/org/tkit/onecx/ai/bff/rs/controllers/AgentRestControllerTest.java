@@ -236,7 +236,6 @@ class AgentRestControllerTest extends AbstractTest {
 
         String testId = "1";
         mockServerClient.when(
-
                 request().withPath("/internal/agents/" + testId)
                         .withMethod(HttpMethod.PUT)
                         .withBody(JsonBody.json(updateRequest)))

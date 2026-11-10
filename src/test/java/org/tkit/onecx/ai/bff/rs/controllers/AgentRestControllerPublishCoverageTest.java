@@ -6,8 +6,10 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
 import org.eclipse.microprofile.rest.client.inject.RestClient;
@@ -18,7 +20,10 @@ import gen.org.tkit.onecx.ai.management.bff.client.api.AgentInternalApi;
 import gen.org.tkit.onecx.ai.management.bff.client.model.AgentConfigurationVersionInternal;
 import gen.org.tkit.onecx.ai.management.bff.client.model.AgentConfigurationVersionListInternal;
 import gen.org.tkit.onecx.ai.management.bff.client.model.CreateAgentConfigurationVersionInternal;
+import gen.org.tkit.onecx.ai.management.bff.client.model.CreateAgentRequestInternal;
+import gen.org.tkit.onecx.ai.management.bff.rs.internal.model.AgentStatusDTO;
 import gen.org.tkit.onecx.ai.management.bff.rs.internal.model.CreateAgentConfigurationVersionDTO;
+import gen.org.tkit.onecx.ai.management.bff.rs.internal.model.CreateAgentRequestDTO;
 import io.quarkus.test.common.http.TestHTTPEndpoint;
 import io.quarkus.test.junit.QuarkusMock;
 import io.quarkus.test.junit.QuarkusTest;
@@ -101,6 +106,7 @@ class AgentRestControllerPublishCoverageTest extends AbstractTest {
         QuarkusMock.installMockForType(api, AgentInternalApi.class, RestClient.LITERAL);
 
         createAndExpectInternalServerError();
+        verify(createResponse).close();
     }
 
     // --- activateAgentConfigurationVersion coverage ---
@@ -168,6 +174,7 @@ class AgentRestControllerPublishCoverageTest extends AbstractTest {
         QuarkusMock.installMockForType(api, AgentInternalApi.class, RestClient.LITERAL);
 
         activateAndExpectInternalServerError();
+        verify(activationResponse).close();
     }
 
     @Test
@@ -218,6 +225,7 @@ class AgentRestControllerPublishCoverageTest extends AbstractTest {
         var api = mock(AgentInternalApi.class);
         var listResponse = mock(Response.class);
         var internalList = new AgentConfigurationVersionListInternal();
+        internalList.setVersions(null);
         when(api.getAgentConfigurationVersions("1")).thenReturn(listResponse);
         when(listResponse.getStatus()).thenReturn(Response.Status.OK.getStatusCode());
         when(listResponse.readEntity(AgentConfigurationVersionListInternal.class)).thenReturn(internalList);
@@ -287,6 +295,27 @@ class AgentRestControllerPublishCoverageTest extends AbstractTest {
         QuarkusMock.installMockForType(api, AgentInternalApi.class, RestClient.LITERAL);
 
         listAndExpectInternalServerError();
+    }
+
+    @Test
+    void listPassesThroughNonJsonErrorBodyWithUpstreamMediaType() {
+        var api = mock(AgentInternalApi.class);
+        var listResponse = mock(Response.class);
+        when(api.getAgentConfigurationVersions("1")).thenReturn(listResponse);
+        when(listResponse.getStatus()).thenReturn(Response.Status.BAD_GATEWAY.getStatusCode());
+        when(listResponse.getMediaType()).thenReturn(MediaType.TEXT_PLAIN_TYPE);
+        when(listResponse.readEntity(String.class)).thenReturn("upstream unavailable");
+        QuarkusMock.installMockForType(api, AgentInternalApi.class, RestClient.LITERAL);
+
+        given()
+                .auth().oauth2(keycloakTestClient.getAccessToken(ADMIN))
+                .header(APM_HEADER_PARAM, ADMIN)
+                .contentType(APPLICATION_JSON)
+                .get("1/configuration/versions")
+                .then()
+                .statusCode(Response.Status.BAD_GATEWAY.getStatusCode())
+                .contentType(MediaType.TEXT_PLAIN)
+                .body(org.hamcrest.Matchers.equalTo("upstream unavailable"));
     }
 
     @Test
@@ -399,6 +428,34 @@ class AgentRestControllerPublishCoverageTest extends AbstractTest {
                 .post("1/configuration/versions")
                 .then()
                 .statusCode(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode());
+    }
+
+    @Test
+    void createAgentPassesThroughDuplicateNameProblemDetail() {
+        var api = mock(AgentInternalApi.class);
+        var createResponse = mock(Response.class);
+        when(api.createAgent(any(CreateAgentRequestInternal.class))).thenReturn(createResponse);
+        when(createResponse.getStatus()).thenReturn(Response.Status.CONFLICT.getStatusCode());
+        when(createResponse.getMediaType()).thenReturn(MediaType.APPLICATION_JSON_TYPE);
+        when(createResponse.readEntity(String.class))
+                .thenReturn("{\"errorCode\":\"DUPLICATE_NAME\",\"detail\":\"Agent name already exists\"}");
+        QuarkusMock.installMockForType(api, AgentInternalApi.class, RestClient.LITERAL);
+
+        var createDTO = new CreateAgentRequestDTO();
+        createDTO.setName("Duplicate Agent");
+        createDTO.setStatus(AgentStatusDTO.DRAFT);
+        createDTO.setA2aEnabled(false);
+
+        given()
+                .auth().oauth2(keycloakTestClient.getAccessToken(ADMIN))
+                .header(APM_HEADER_PARAM, ADMIN)
+                .contentType(APPLICATION_JSON)
+                .body(createDTO)
+                .post()
+                .then()
+                .statusCode(Response.Status.CONFLICT.getStatusCode())
+                .body("errorCode", org.hamcrest.Matchers.equalTo("DUPLICATE_NAME"))
+                .body("detail", org.hamcrest.Matchers.equalTo("Agent name already exists"));
     }
 
     @Test

@@ -105,7 +105,8 @@ public class AgentRestController implements AgentApiService {
 
     private static Response passThroughError(Response response) {
         var body = response.readEntity(String.class);
-        return Response.status(response.getStatus()).type(MediaType.APPLICATION_JSON).entity(body).build();
+        var mediaType = response.getMediaType() != null ? response.getMediaType() : MediaType.APPLICATION_JSON_TYPE;
+        return Response.status(response.getStatus()).type(mediaType).entity(body).build();
     }
 
     @Override

@@ -206,10 +206,6 @@ paths:
       responses:
         "201":
           description: Immutable version created
-          headers:
-            Location:
-              schema:
-                type: string
           content:
             application/json:
               schema:
