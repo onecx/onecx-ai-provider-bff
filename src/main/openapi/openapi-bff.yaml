@@ -2015,6 +2015,10 @@ components:
           type: string
         modelConfig:
           type: string
+          description: >-
+            Opaque model configuration, limited to 255 characters. For OpenAI providers, supported JSON
+            properties are api (chat-completions or responses) and optional string reasoningEffort.
+            Null or omitted on update preserves the existing configuration; blank strings are accepted as unset.
         communicationMode:
           $ref: '#/components/schemas/CommunicationMode'
         provider:
@@ -2028,6 +2032,9 @@ components:
           type: string
         modelConfig:
           type: string
+          description: >-
+            Opaque model configuration, limited to 255 characters. For OpenAI providers, supported JSON
+            properties are api (chat-completions or responses) and optional string reasoningEffort.
         communicationMode:
           $ref: '#/components/schemas/CommunicationMode'
         provider:
@@ -2046,6 +2053,10 @@ components:
           type: string
         modelConfig:
           type: string
+          description: >-
+            Opaque model configuration, limited to 255 characters. For OpenAI providers, supported JSON
+            properties are api (chat-completions or responses) and optional string reasoningEffort.
+            Null or omitted on update preserves the existing configuration; blank strings are accepted as unset.
         communicationMode:
           $ref: '#/components/schemas/CommunicationMode'
         provider:
