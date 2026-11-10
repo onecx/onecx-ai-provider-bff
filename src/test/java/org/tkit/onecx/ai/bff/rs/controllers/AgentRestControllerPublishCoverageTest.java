@@ -210,7 +210,7 @@ class AgentRestControllerPublishCoverageTest extends AbstractTest {
                 .extract()
                 .jsonPath();
 
-        org.junit.jupiter.api.Assertions.assertEquals(2, result.getList("versions"));
+        org.junit.jupiter.api.Assertions.assertEquals(2, result.getList("versions").size());
     }
 
     @Test
@@ -233,7 +233,7 @@ class AgentRestControllerPublishCoverageTest extends AbstractTest {
                 .extract()
                 .jsonPath();
 
-        org.junit.jupiter.api.Assertions.assertEquals(0, result.getList("versions"));
+        org.junit.jupiter.api.Assertions.assertEquals(0, result.getList("versions").size());
     }
 
     @Test
