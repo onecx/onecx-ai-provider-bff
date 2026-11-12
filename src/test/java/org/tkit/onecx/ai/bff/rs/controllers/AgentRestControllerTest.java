@@ -8,16 +8,26 @@ import static jakarta.ws.rs.core.MediaType.TEXT_PLAIN_TYPE;
 import static org.hamcrest.Matchers.equalTo;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
 
+import java.lang.annotation.Annotation;
+import java.net.URI;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
 
 import jakarta.ws.rs.HttpMethod;
+import jakarta.ws.rs.core.EntityTag;
+import jakarta.ws.rs.core.GenericType;
+import jakarta.ws.rs.core.Link;
+import jakarta.ws.rs.core.MultivaluedHashMap;
+import jakarta.ws.rs.core.MultivaluedMap;
+import jakarta.ws.rs.core.NewCookie;
 import jakarta.ws.rs.core.Response;
 
 import org.eclipse.microprofile.rest.client.inject.RestClient;
@@ -845,10 +855,9 @@ class AgentRestControllerTest extends AbstractTest {
     @Test
     void createPropagatesUnexpectedStatus() {
         var api = mock(AgentInternalApi.class);
-        var createResponse = mock(Response.class);
+        var createResponse = new StubResponse(Response.Status.OK.getStatusCode());
         when(api.createAgentConfigurationVersion(eq("1"), any(CreateAgentConfigurationVersionInternal.class)))
                 .thenReturn(createResponse);
-        when(createResponse.getStatus()).thenReturn(Response.Status.OK.getStatusCode());
         QuarkusMock.installMockForType(api, AgentInternalApi.class, RestClient.LITERAL);
 
         given()
@@ -864,11 +873,10 @@ class AgentRestControllerTest extends AbstractTest {
     @Test
     void createReportsCloseFailureAfterUnexpectedStatus() {
         var api = mock(AgentInternalApi.class);
-        var createResponse = mock(Response.class);
+        var createResponse = new StubResponse(Response.Status.OK.getStatusCode())
+                .closeFails(new IllegalStateException("could not close create response"));
         when(api.createAgentConfigurationVersion(eq("1"), any(CreateAgentConfigurationVersionInternal.class)))
                 .thenReturn(createResponse);
-        when(createResponse.getStatus()).thenReturn(Response.Status.OK.getStatusCode());
-        doThrow(new IllegalStateException("could not close create response")).when(createResponse).close();
         QuarkusMock.installMockForType(api, AgentInternalApi.class, RestClient.LITERAL);
 
         createAndExpectInternalServerError();
@@ -887,13 +895,11 @@ class AgentRestControllerTest extends AbstractTest {
     @Test
     void createClosesResponseWhenReadFails() {
         var api = mock(AgentInternalApi.class);
-        var createResponse = mock(Response.class);
+        var createResponse = new StubResponse(Response.Status.CREATED.getStatusCode())
+                .readFails(new IllegalStateException("could not read create response"))
+                .closeFails(new IllegalStateException("could not close create response"));
         when(api.createAgentConfigurationVersion(eq("1"), any(CreateAgentConfigurationVersionInternal.class)))
                 .thenReturn(createResponse);
-        when(createResponse.getStatus()).thenReturn(Response.Status.CREATED.getStatusCode());
-        when(createResponse.readEntity(AgentConfigurationVersionInternal.class))
-                .thenThrow(new IllegalStateException("could not read create response"));
-        doThrow(new IllegalStateException("could not close create response")).when(createResponse).close();
         QuarkusMock.installMockForType(api, AgentInternalApi.class, RestClient.LITERAL);
 
         createAndExpectInternalServerError();
@@ -902,24 +908,21 @@ class AgentRestControllerTest extends AbstractTest {
     @Test
     void createClosesResponseCleanlyWhenReadFails() {
         var api = mock(AgentInternalApi.class);
-        var createResponse = mock(Response.class);
+        var createResponse = new StubResponse(Response.Status.CREATED.getStatusCode())
+                .readFails(new IllegalStateException("could not read create response"));
         when(api.createAgentConfigurationVersion(eq("1"), any(CreateAgentConfigurationVersionInternal.class)))
                 .thenReturn(createResponse);
-        when(createResponse.getStatus()).thenReturn(Response.Status.CREATED.getStatusCode());
-        when(createResponse.readEntity(AgentConfigurationVersionInternal.class))
-                .thenThrow(new IllegalStateException("could not read create response"));
         QuarkusMock.installMockForType(api, AgentInternalApi.class, RestClient.LITERAL);
 
         createAndExpectInternalServerError();
-        verify(createResponse).close();
+        Assertions.assertEquals(1, createResponse.closeCount());
     }
 
     @Test
     void activatePropagatesUnexpectedStatus() {
         var api = mock(AgentInternalApi.class);
-        var activationResponse = mock(Response.class);
+        var activationResponse = new StubResponse(Response.Status.NO_CONTENT.getStatusCode());
         when(api.activateAgentConfigurationVersion("1", "version-2")).thenReturn(activationResponse);
-        when(activationResponse.getStatus()).thenReturn(Response.Status.NO_CONTENT.getStatusCode());
         QuarkusMock.installMockForType(api, AgentInternalApi.class, RestClient.LITERAL);
 
         given()
@@ -934,10 +937,9 @@ class AgentRestControllerTest extends AbstractTest {
     @Test
     void activateReportsCloseFailureAfterUnexpectedStatus() {
         var api = mock(AgentInternalApi.class);
-        var activationResponse = mock(Response.class);
+        var activationResponse = new StubResponse(Response.Status.NO_CONTENT.getStatusCode())
+                .closeFails(new IllegalStateException("could not close activation response"));
         when(api.activateAgentConfigurationVersion("1", "version-2")).thenReturn(activationResponse);
-        when(activationResponse.getStatus()).thenReturn(Response.Status.NO_CONTENT.getStatusCode());
-        doThrow(new IllegalStateException("could not close activation response")).when(activationResponse).close();
         QuarkusMock.installMockForType(api, AgentInternalApi.class, RestClient.LITERAL);
 
         activateAndExpectInternalServerError();
@@ -955,12 +957,10 @@ class AgentRestControllerTest extends AbstractTest {
     @Test
     void activateClosesResponseWhenReadFails() {
         var api = mock(AgentInternalApi.class);
-        var activationResponse = mock(Response.class);
+        var activationResponse = new StubResponse(Response.Status.OK.getStatusCode())
+                .readFails(new IllegalStateException("could not read activation response"))
+                .closeFails(new IllegalStateException("could not close activation response"));
         when(api.activateAgentConfigurationVersion("1", "version-2")).thenReturn(activationResponse);
-        when(activationResponse.getStatus()).thenReturn(Response.Status.OK.getStatusCode());
-        when(activationResponse.readEntity(AgentConfigurationVersionInternal.class))
-                .thenThrow(new IllegalStateException("could not read activation response"));
-        doThrow(new IllegalStateException("could not close activation response")).when(activationResponse).close();
         QuarkusMock.installMockForType(api, AgentInternalApi.class, RestClient.LITERAL);
 
         activateAndExpectInternalServerError();
@@ -969,26 +969,23 @@ class AgentRestControllerTest extends AbstractTest {
     @Test
     void activateClosesResponseCleanlyWhenReadFails() {
         var api = mock(AgentInternalApi.class);
-        var activationResponse = mock(Response.class);
+        var activationResponse = new StubResponse(Response.Status.OK.getStatusCode())
+                .readFails(new IllegalStateException("could not read activation response"));
         when(api.activateAgentConfigurationVersion("1", "version-2")).thenReturn(activationResponse);
-        when(activationResponse.getStatus()).thenReturn(Response.Status.OK.getStatusCode());
-        when(activationResponse.readEntity(AgentConfigurationVersionInternal.class))
-                .thenThrow(new IllegalStateException("could not read activation response"));
         QuarkusMock.installMockForType(api, AgentInternalApi.class, RestClient.LITERAL);
 
         activateAndExpectInternalServerError();
-        verify(activationResponse).close();
+        Assertions.assertEquals(1, activationResponse.closeCount());
     }
 
     @Test
     void activateReportsCloseFailureFromResponse() {
         var api = mock(AgentInternalApi.class);
-        var activationResponse = mock(Response.class);
         var version = new AgentConfigurationVersionInternal().id("version-2").name("release-2").active(true);
+        var activationResponse = new StubResponse(Response.Status.OK.getStatusCode())
+                .entity(version)
+                .closeFails(new IllegalStateException("could not close activation response"));
         when(api.activateAgentConfigurationVersion("1", "version-2")).thenReturn(activationResponse);
-        when(activationResponse.getStatus()).thenReturn(Response.Status.OK.getStatusCode());
-        when(activationResponse.readEntity(AgentConfigurationVersionInternal.class)).thenReturn(version);
-        doThrow(new IllegalStateException("could not close activation response")).when(activationResponse).close();
         QuarkusMock.installMockForType(api, AgentInternalApi.class, RestClient.LITERAL);
 
         activateAndExpectInternalServerError();
@@ -997,15 +994,13 @@ class AgentRestControllerTest extends AbstractTest {
     @Test
     void listReturnsVersions() {
         var api = mock(AgentInternalApi.class);
-        var listResponse = mock(Response.class);
         var version1 = new AgentConfigurationVersionInternal().id("v1").name("release-1").active(false);
         var version2 = new AgentConfigurationVersionInternal().id("v2").name("release-2").active(true);
         var internalList = new AgentConfigurationVersionListInternal()
                 .addVersionsItem(version1)
                 .addVersionsItem(version2);
+        var listResponse = new StubResponse(Response.Status.OK.getStatusCode()).entity(internalList);
         when(api.getAgentConfigurationVersions("1")).thenReturn(listResponse);
-        when(listResponse.getStatus()).thenReturn(Response.Status.OK.getStatusCode());
-        when(listResponse.readEntity(AgentConfigurationVersionListInternal.class)).thenReturn(internalList);
         QuarkusMock.installMockForType(api, AgentInternalApi.class, RestClient.LITERAL);
 
         var result = given()
@@ -1024,12 +1019,10 @@ class AgentRestControllerTest extends AbstractTest {
     @Test
     void listHandlesNullVersionsList() {
         var api = mock(AgentInternalApi.class);
-        var listResponse = mock(Response.class);
         var internalList = new AgentConfigurationVersionListInternal();
         internalList.setVersions(null);
+        var listResponse = new StubResponse(Response.Status.OK.getStatusCode()).entity(internalList);
         when(api.getAgentConfigurationVersions("1")).thenReturn(listResponse);
-        when(listResponse.getStatus()).thenReturn(Response.Status.OK.getStatusCode());
-        when(listResponse.readEntity(AgentConfigurationVersionListInternal.class)).thenReturn(internalList);
         QuarkusMock.installMockForType(api, AgentInternalApi.class, RestClient.LITERAL);
 
         var result = given()
@@ -1048,9 +1041,8 @@ class AgentRestControllerTest extends AbstractTest {
     @Test
     void listPropagatesNonOkStatus() {
         var api = mock(AgentInternalApi.class);
-        var listResponse = mock(Response.class);
+        var listResponse = new StubResponse(Response.Status.NOT_FOUND.getStatusCode());
         when(api.getAgentConfigurationVersions("1")).thenReturn(listResponse);
-        when(listResponse.getStatus()).thenReturn(Response.Status.NOT_FOUND.getStatusCode());
         QuarkusMock.installMockForType(api, AgentInternalApi.class, RestClient.LITERAL);
 
         given()
@@ -1074,12 +1066,10 @@ class AgentRestControllerTest extends AbstractTest {
     @Test
     void listClosesResponseWhenReadFails() {
         var api = mock(AgentInternalApi.class);
-        var listResponse = mock(Response.class);
+        var listResponse = new StubResponse(Response.Status.OK.getStatusCode())
+                .readFails(new IllegalStateException("could not read list response"))
+                .closeFails(new IllegalStateException("could not close list response"));
         when(api.getAgentConfigurationVersions("1")).thenReturn(listResponse);
-        when(listResponse.getStatus()).thenReturn(Response.Status.OK.getStatusCode());
-        when(listResponse.readEntity(AgentConfigurationVersionListInternal.class))
-                .thenThrow(new IllegalStateException("could not read list response"));
-        doThrow(new IllegalStateException("could not close list response")).when(listResponse).close();
         QuarkusMock.installMockForType(api, AgentInternalApi.class, RestClient.LITERAL);
 
         listAndExpectInternalServerError();
@@ -1088,24 +1078,22 @@ class AgentRestControllerTest extends AbstractTest {
     @Test
     void listClosesResponseCleanlyWhenReadFails() {
         var api = mock(AgentInternalApi.class);
-        var listResponse = mock(Response.class);
+        var listResponse = new StubResponse(Response.Status.OK.getStatusCode())
+                .readFails(new IllegalStateException("could not read list response"));
         when(api.getAgentConfigurationVersions("1")).thenReturn(listResponse);
-        when(listResponse.getStatus()).thenReturn(Response.Status.OK.getStatusCode());
-        when(listResponse.readEntity(AgentConfigurationVersionListInternal.class))
-                .thenThrow(new IllegalStateException("could not read list response"));
         QuarkusMock.installMockForType(api, AgentInternalApi.class, RestClient.LITERAL);
 
         listAndExpectInternalServerError();
+        Assertions.assertEquals(1, listResponse.closeCount());
     }
 
     @Test
     void listPassesThroughNonJsonErrorBodyWithUpstreamMediaType() {
         var api = mock(AgentInternalApi.class);
-        var listResponse = mock(Response.class);
+        var listResponse = new StubResponse(Response.Status.BAD_GATEWAY.getStatusCode())
+                .mediaType(TEXT_PLAIN_TYPE)
+                .entity("upstream unavailable");
         when(api.getAgentConfigurationVersions("1")).thenReturn(listResponse);
-        when(listResponse.getStatus()).thenReturn(Response.Status.BAD_GATEWAY.getStatusCode());
-        when(listResponse.getMediaType()).thenReturn(TEXT_PLAIN_TYPE);
-        when(listResponse.readEntity(String.class)).thenReturn("upstream unavailable");
         QuarkusMock.installMockForType(api, AgentInternalApi.class, RestClient.LITERAL);
 
         given()
@@ -1122,13 +1110,12 @@ class AgentRestControllerTest extends AbstractTest {
     @Test
     void listReportsCloseFailureFromResponse() {
         var api = mock(AgentInternalApi.class);
-        var listResponse = mock(Response.class);
         var internalList = new AgentConfigurationVersionListInternal()
                 .addVersionsItem(new AgentConfigurationVersionInternal().id("v1").name("r1").active(true));
+        var listResponse = new StubResponse(Response.Status.OK.getStatusCode())
+                .entity(internalList)
+                .closeFails(new IllegalStateException("could not close list response"));
         when(api.getAgentConfigurationVersions("1")).thenReturn(listResponse);
-        when(listResponse.getStatus()).thenReturn(Response.Status.OK.getStatusCode());
-        when(listResponse.readEntity(AgentConfigurationVersionListInternal.class)).thenReturn(internalList);
-        doThrow(new IllegalStateException("could not close list response")).when(listResponse).close();
         QuarkusMock.installMockForType(api, AgentInternalApi.class, RestClient.LITERAL);
 
         listAndExpectInternalServerError();
@@ -1137,10 +1124,9 @@ class AgentRestControllerTest extends AbstractTest {
     @Test
     void getVersionPassesThroughErrorBody() {
         var api = mock(AgentInternalApi.class);
-        var getResponse = mock(Response.class);
+        var getResponse = new StubResponse(Response.Status.NOT_FOUND.getStatusCode())
+                .entity("{\"errorCode\":\"NOT_FOUND\"}");
         when(api.getAgentConfigurationVersion("1", "version-2")).thenReturn(getResponse);
-        when(getResponse.getStatus()).thenReturn(Response.Status.NOT_FOUND.getStatusCode());
-        when(getResponse.readEntity(String.class)).thenReturn("{\"errorCode\":\"NOT_FOUND\"}");
         QuarkusMock.installMockForType(api, AgentInternalApi.class, RestClient.LITERAL);
 
         given()
@@ -1156,10 +1142,9 @@ class AgentRestControllerTest extends AbstractTest {
     @Test
     void listPassesThroughErrorBody() {
         var api = mock(AgentInternalApi.class);
-        var listResponse = mock(Response.class);
+        var listResponse = new StubResponse(Response.Status.CONFLICT.getStatusCode())
+                .entity("{\"errorCode\":\"CONFLICT\"}");
         when(api.getAgentConfigurationVersions("1")).thenReturn(listResponse);
-        when(listResponse.getStatus()).thenReturn(Response.Status.CONFLICT.getStatusCode());
-        when(listResponse.readEntity(String.class)).thenReturn("{\"errorCode\":\"CONFLICT\"}");
         QuarkusMock.installMockForType(api, AgentInternalApi.class, RestClient.LITERAL);
 
         given()
@@ -1175,12 +1160,10 @@ class AgentRestControllerTest extends AbstractTest {
     @Test
     void createPassesThroughDuplicateNameProblemDetail() {
         var api = mock(AgentInternalApi.class);
-        var createResponse = mock(Response.class);
+        var createResponse = new StubResponse(Response.Status.CONFLICT.getStatusCode())
+                .entity("{\"errorCode\":\"DUPLICATE_NAME\",\"detail\":\"Version name already exists\"}");
         when(api.createAgentConfigurationVersion(eq("1"), any(CreateAgentConfigurationVersionInternal.class)))
                 .thenReturn(createResponse);
-        when(createResponse.getStatus()).thenReturn(Response.Status.CONFLICT.getStatusCode());
-        when(createResponse.readEntity(String.class))
-                .thenReturn("{\"errorCode\":\"DUPLICATE_NAME\",\"detail\":\"Version name already exists\"}");
         QuarkusMock.installMockForType(api, AgentInternalApi.class, RestClient.LITERAL);
 
         given()
@@ -1198,11 +1181,9 @@ class AgentRestControllerTest extends AbstractTest {
     @Test
     void activatePassesThroughErrorProblemDetail() {
         var api = mock(AgentInternalApi.class);
-        var activationResponse = mock(Response.class);
+        var activationResponse = new StubResponse(Response.Status.NOT_FOUND.getStatusCode())
+                .entity("{\"errorCode\":\"NOT_FOUND\",\"detail\":\"Version not found\"}");
         when(api.activateAgentConfigurationVersion("1", "version-2")).thenReturn(activationResponse);
-        when(activationResponse.getStatus()).thenReturn(Response.Status.NOT_FOUND.getStatusCode());
-        when(activationResponse.readEntity(String.class))
-                .thenReturn("{\"errorCode\":\"NOT_FOUND\",\"detail\":\"Version not found\"}");
         QuarkusMock.installMockForType(api, AgentInternalApi.class, RestClient.LITERAL);
 
         given()
@@ -1219,12 +1200,10 @@ class AgentRestControllerTest extends AbstractTest {
     @Test
     void createAgentPassesThroughDuplicateNameProblemDetail() {
         var api = mock(AgentInternalApi.class);
-        var createResponse = mock(Response.class);
+        var createResponse = new StubResponse(Response.Status.CONFLICT.getStatusCode())
+                .mediaType(APPLICATION_JSON_TYPE)
+                .entity("{\"errorCode\":\"DUPLICATE_NAME\",\"detail\":\"Agent name already exists\"}");
         when(api.createAgent(any(CreateAgentRequestInternal.class))).thenReturn(createResponse);
-        when(createResponse.getStatus()).thenReturn(Response.Status.CONFLICT.getStatusCode());
-        when(createResponse.getMediaType()).thenReturn(APPLICATION_JSON_TYPE);
-        when(createResponse.readEntity(String.class))
-                .thenReturn("{\"errorCode\":\"DUPLICATE_NAME\",\"detail\":\"Agent name already exists\"}");
         QuarkusMock.installMockForType(api, AgentInternalApi.class, RestClient.LITERAL);
 
         var createDTO = new CreateAgentRequestDTO();
@@ -1302,5 +1281,182 @@ class AgentRestControllerTest extends AbstractTest {
         var request = new CreateAgentConfigurationVersionDTO();
         request.setName("release-2");
         return request;
+    }
+
+    /**
+     * Plain JAX-RS {@link Response} stub. Mockito cannot mock {@link Response} in the packaged IT run,
+     * because the static factories and mock creation need the JAX-RS RuntimeDelegate lookup.
+     */
+    private static final class StubResponse extends Response {
+        private final int status;
+        private jakarta.ws.rs.core.MediaType mediaType;
+        private Object entity;
+        private RuntimeException readFailure;
+        private RuntimeException closeFailure;
+        private int closeCount;
+
+        StubResponse(int status) {
+            this.status = status;
+        }
+
+        StubResponse mediaType(jakarta.ws.rs.core.MediaType mediaType) {
+            this.mediaType = mediaType;
+            return this;
+        }
+
+        StubResponse entity(Object entity) {
+            this.entity = entity;
+            return this;
+        }
+
+        StubResponse readFails(RuntimeException failure) {
+            this.readFailure = failure;
+            return this;
+        }
+
+        StubResponse closeFails(RuntimeException failure) {
+            this.closeFailure = failure;
+            return this;
+        }
+
+        int closeCount() {
+            return closeCount;
+        }
+
+        @Override
+        public int getStatus() {
+            return status;
+        }
+
+        @Override
+        public StatusType getStatusInfo() {
+            return Status.fromStatusCode(status);
+        }
+
+        @Override
+        public Object getEntity() {
+            return entity;
+        }
+
+        @Override
+        public <T> T readEntity(Class<T> type) {
+            if (readFailure != null) {
+                throw readFailure;
+            }
+            return type.cast(entity);
+        }
+
+        @Override
+        public <T> T readEntity(GenericType<T> type) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public <T> T readEntity(Class<T> type, Annotation[] annotations) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public <T> T readEntity(GenericType<T> type, Annotation[] annotations) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public boolean hasEntity() {
+            return entity != null;
+        }
+
+        @Override
+        public boolean bufferEntity() {
+            return false;
+        }
+
+        @Override
+        public void close() {
+            closeCount++;
+            if (closeFailure != null) {
+                throw closeFailure;
+            }
+        }
+
+        @Override
+        public jakarta.ws.rs.core.MediaType getMediaType() {
+            return mediaType;
+        }
+
+        @Override
+        public Locale getLanguage() {
+            return null;
+        }
+
+        @Override
+        public int getLength() {
+            return -1;
+        }
+
+        @Override
+        public Set<String> getAllowedMethods() {
+            return Set.of();
+        }
+
+        @Override
+        public Map<String, NewCookie> getCookies() {
+            return Map.of();
+        }
+
+        @Override
+        public EntityTag getEntityTag() {
+            return null;
+        }
+
+        @Override
+        public Date getDate() {
+            return null;
+        }
+
+        @Override
+        public Date getLastModified() {
+            return null;
+        }
+
+        @Override
+        public URI getLocation() {
+            return null;
+        }
+
+        @Override
+        public Set<Link> getLinks() {
+            return Set.of();
+        }
+
+        @Override
+        public boolean hasLink(String relation) {
+            return false;
+        }
+
+        @Override
+        public Link getLink(String relation) {
+            return null;
+        }
+
+        @Override
+        public Link.Builder getLinkBuilder(String relation) {
+            return null;
+        }
+
+        @Override
+        public MultivaluedMap<String, Object> getMetadata() {
+            return new MultivaluedHashMap<>();
+        }
+
+        @Override
+        public MultivaluedMap<String, String> getStringHeaders() {
+            return new MultivaluedHashMap<>();
+        }
+
+        @Override
+        public String getHeaderString(String name) {
+            return null;
+        }
     }
 }
