@@ -33,6 +33,7 @@ import jakarta.ws.rs.core.Response;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.mockserver.client.MockServerClient;
 import org.mockserver.model.JsonBody;
@@ -61,6 +62,9 @@ class AgentRestControllerTest extends AbstractTest {
 
     KeycloakTestClient keycloakTestClient = new KeycloakTestClient();
     static final String MOCK_ID = "MOCK";
+
+    // QuarkusMock needs CDI, which is not available in the packaged IT run; these tests are excluded there
+    static final String CDI_MOCK_TAG = "cdi-mock";
 
     @AfterEach
     void resetMockserver() {
@@ -853,6 +857,7 @@ class AgentRestControllerTest extends AbstractTest {
     }
 
     @Test
+    @Tag(CDI_MOCK_TAG)
     void createPropagatesUnexpectedStatus() {
         var api = mock(AgentInternalApi.class);
         var createResponse = new StubResponse(Response.Status.OK.getStatusCode());
@@ -871,6 +876,7 @@ class AgentRestControllerTest extends AbstractTest {
     }
 
     @Test
+    @Tag(CDI_MOCK_TAG)
     void createReportsCloseFailureAfterUnexpectedStatus() {
         var api = mock(AgentInternalApi.class);
         var createResponse = new StubResponse(Response.Status.OK.getStatusCode())
@@ -883,6 +889,7 @@ class AgentRestControllerTest extends AbstractTest {
     }
 
     @Test
+    @Tag(CDI_MOCK_TAG)
     void createHandlesNullResponseFromClient() {
         var api = mock(AgentInternalApi.class);
         when(api.createAgentConfigurationVersion(eq("1"), any(CreateAgentConfigurationVersionInternal.class)))
@@ -893,6 +900,7 @@ class AgentRestControllerTest extends AbstractTest {
     }
 
     @Test
+    @Tag(CDI_MOCK_TAG)
     void createClosesResponseWhenReadFails() {
         var api = mock(AgentInternalApi.class);
         var createResponse = new StubResponse(Response.Status.CREATED.getStatusCode())
@@ -906,6 +914,7 @@ class AgentRestControllerTest extends AbstractTest {
     }
 
     @Test
+    @Tag(CDI_MOCK_TAG)
     void createClosesResponseCleanlyWhenReadFails() {
         var api = mock(AgentInternalApi.class);
         var createResponse = new StubResponse(Response.Status.CREATED.getStatusCode())
@@ -919,6 +928,7 @@ class AgentRestControllerTest extends AbstractTest {
     }
 
     @Test
+    @Tag(CDI_MOCK_TAG)
     void activatePropagatesUnexpectedStatus() {
         var api = mock(AgentInternalApi.class);
         var activationResponse = new StubResponse(Response.Status.NO_CONTENT.getStatusCode());
@@ -935,6 +945,7 @@ class AgentRestControllerTest extends AbstractTest {
     }
 
     @Test
+    @Tag(CDI_MOCK_TAG)
     void activateReportsCloseFailureAfterUnexpectedStatus() {
         var api = mock(AgentInternalApi.class);
         var activationResponse = new StubResponse(Response.Status.NO_CONTENT.getStatusCode())
@@ -946,6 +957,7 @@ class AgentRestControllerTest extends AbstractTest {
     }
 
     @Test
+    @Tag(CDI_MOCK_TAG)
     void activateHandlesNullResponseFromClient() {
         var api = mock(AgentInternalApi.class);
         when(api.activateAgentConfigurationVersion("1", "version-2")).thenReturn(null);
@@ -955,6 +967,7 @@ class AgentRestControllerTest extends AbstractTest {
     }
 
     @Test
+    @Tag(CDI_MOCK_TAG)
     void activateClosesResponseWhenReadFails() {
         var api = mock(AgentInternalApi.class);
         var activationResponse = new StubResponse(Response.Status.OK.getStatusCode())
@@ -967,6 +980,7 @@ class AgentRestControllerTest extends AbstractTest {
     }
 
     @Test
+    @Tag(CDI_MOCK_TAG)
     void activateClosesResponseCleanlyWhenReadFails() {
         var api = mock(AgentInternalApi.class);
         var activationResponse = new StubResponse(Response.Status.OK.getStatusCode())
@@ -979,6 +993,7 @@ class AgentRestControllerTest extends AbstractTest {
     }
 
     @Test
+    @Tag(CDI_MOCK_TAG)
     void activateReportsCloseFailureFromResponse() {
         var api = mock(AgentInternalApi.class);
         var version = new AgentConfigurationVersionInternal().id("version-2").name("release-2").active(true);
@@ -992,6 +1007,7 @@ class AgentRestControllerTest extends AbstractTest {
     }
 
     @Test
+    @Tag(CDI_MOCK_TAG)
     void listReturnsVersions() {
         var api = mock(AgentInternalApi.class);
         var version1 = new AgentConfigurationVersionInternal().id("v1").name("release-1").active(false);
@@ -1017,6 +1033,7 @@ class AgentRestControllerTest extends AbstractTest {
     }
 
     @Test
+    @Tag(CDI_MOCK_TAG)
     void listHandlesNullVersionsList() {
         var api = mock(AgentInternalApi.class);
         var internalList = new AgentConfigurationVersionListInternal();
@@ -1039,6 +1056,7 @@ class AgentRestControllerTest extends AbstractTest {
     }
 
     @Test
+    @Tag(CDI_MOCK_TAG)
     void listPropagatesNonOkStatus() {
         var api = mock(AgentInternalApi.class);
         var listResponse = new StubResponse(Response.Status.NOT_FOUND.getStatusCode());
@@ -1055,6 +1073,7 @@ class AgentRestControllerTest extends AbstractTest {
     }
 
     @Test
+    @Tag(CDI_MOCK_TAG)
     void listHandlesNullResponseFromClient() {
         var api = mock(AgentInternalApi.class);
         when(api.getAgentConfigurationVersions("1")).thenReturn(null);
@@ -1064,6 +1083,7 @@ class AgentRestControllerTest extends AbstractTest {
     }
 
     @Test
+    @Tag(CDI_MOCK_TAG)
     void listClosesResponseWhenReadFails() {
         var api = mock(AgentInternalApi.class);
         var listResponse = new StubResponse(Response.Status.OK.getStatusCode())
@@ -1076,6 +1096,7 @@ class AgentRestControllerTest extends AbstractTest {
     }
 
     @Test
+    @Tag(CDI_MOCK_TAG)
     void listClosesResponseCleanlyWhenReadFails() {
         var api = mock(AgentInternalApi.class);
         var listResponse = new StubResponse(Response.Status.OK.getStatusCode())
@@ -1088,6 +1109,7 @@ class AgentRestControllerTest extends AbstractTest {
     }
 
     @Test
+    @Tag(CDI_MOCK_TAG)
     void listPassesThroughNonJsonErrorBodyWithUpstreamMediaType() {
         var api = mock(AgentInternalApi.class);
         var listResponse = new StubResponse(Response.Status.BAD_GATEWAY.getStatusCode())
@@ -1108,6 +1130,7 @@ class AgentRestControllerTest extends AbstractTest {
     }
 
     @Test
+    @Tag(CDI_MOCK_TAG)
     void listReportsCloseFailureFromResponse() {
         var api = mock(AgentInternalApi.class);
         var internalList = new AgentConfigurationVersionListInternal()
@@ -1122,6 +1145,7 @@ class AgentRestControllerTest extends AbstractTest {
     }
 
     @Test
+    @Tag(CDI_MOCK_TAG)
     void getVersionPassesThroughErrorBody() {
         var api = mock(AgentInternalApi.class);
         var getResponse = new StubResponse(Response.Status.NOT_FOUND.getStatusCode())
@@ -1140,6 +1164,7 @@ class AgentRestControllerTest extends AbstractTest {
     }
 
     @Test
+    @Tag(CDI_MOCK_TAG)
     void listPassesThroughErrorBody() {
         var api = mock(AgentInternalApi.class);
         var listResponse = new StubResponse(Response.Status.CONFLICT.getStatusCode())
@@ -1158,6 +1183,7 @@ class AgentRestControllerTest extends AbstractTest {
     }
 
     @Test
+    @Tag(CDI_MOCK_TAG)
     void createPassesThroughDuplicateNameProblemDetail() {
         var api = mock(AgentInternalApi.class);
         var createResponse = new StubResponse(Response.Status.CONFLICT.getStatusCode())
@@ -1179,6 +1205,7 @@ class AgentRestControllerTest extends AbstractTest {
     }
 
     @Test
+    @Tag(CDI_MOCK_TAG)
     void activatePassesThroughErrorProblemDetail() {
         var api = mock(AgentInternalApi.class);
         var activationResponse = new StubResponse(Response.Status.NOT_FOUND.getStatusCode())
@@ -1198,6 +1225,7 @@ class AgentRestControllerTest extends AbstractTest {
     }
 
     @Test
+    @Tag(CDI_MOCK_TAG)
     void createAgentPassesThroughDuplicateNameProblemDetail() {
         var api = mock(AgentInternalApi.class);
         var createResponse = new StubResponse(Response.Status.CONFLICT.getStatusCode())
