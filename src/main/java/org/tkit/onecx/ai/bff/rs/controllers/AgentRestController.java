@@ -1,11 +1,13 @@
 package org.tkit.onecx.ai.bff.rs.controllers;
 
 import java.util.List;
+import java.util.function.UnaryOperator;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import jakarta.validation.ConstraintViolationException;
+import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
 import org.eclipse.microprofile.rest.client.inject.RestClient;
@@ -42,10 +44,13 @@ public class AgentRestController implements AgentApiService {
     @Override
     public Response createAgent(CreateAgentRequestDTO createAgentRequestDTO) {
         CreateAgentRequestInternal createAgentRequest = agentMapper.mapCreate(createAgentRequestDTO);
-        try (Response createResponse = agentInternalApi.createAgent(createAgentRequest)) {
+        return consume(agentInternalApi.createAgent(createAgentRequest), createResponse -> {
+            if (createResponse.getStatus() >= Response.Status.BAD_REQUEST.getStatusCode()) {
+                return passThroughError(createResponse);
+            }
             var createdAgent = createResponse.readEntity(AgentInternal.class);
             return Response.status(createResponse.getStatus()).entity(agentMapper.map(createdAgent)).build();
-        }
+        });
     }
 
     @Override
@@ -62,6 +67,75 @@ public class AgentRestController implements AgentApiService {
             AgentPageResultInternal agentPageResult = searchResponse.readEntity(AgentPageResultInternal.class);
             return Response.status(searchResponse.getStatus()).entity(agentMapper.mapPageResult(agentPageResult)).build();
         }
+    }
+
+    @Override
+    public Response createAgentConfigurationVersion(String id,
+            CreateAgentConfigurationVersionDTO createAgentConfigurationVersionDTO) {
+        var request = agentMapper.mapCreateConfigurationVersion(createAgentConfigurationVersionDTO);
+        return consume(agentInternalApi.createAgentConfigurationVersion(id, request), response -> {
+            if (response.getStatus() >= Response.Status.BAD_REQUEST.getStatusCode()) {
+                return passThroughError(response);
+            }
+            var version = response.readEntity(AgentConfigurationVersionInternal.class);
+            return Response.status(response.getStatus()).entity(agentMapper.map(version)).build();
+        });
+    }
+
+    @Override
+    public Response getAgentConfigurationVersion(String id, String versionId) {
+        return consume(agentInternalApi.getAgentConfigurationVersion(id, versionId), response -> {
+            if (response.getStatus() >= Response.Status.BAD_REQUEST.getStatusCode()) {
+                return passThroughError(response);
+            }
+            var configuration = response.readEntity(AgentConfigurationInternal.class);
+            return Response.status(response.getStatus()).entity(agentMapper.map(configuration)).build();
+        });
+    }
+
+    @Override
+    public Response activateAgentConfigurationVersion(String id, String versionId) {
+        return consume(agentInternalApi.activateAgentConfigurationVersion(id, versionId), response -> {
+            if (response.getStatus() >= Response.Status.BAD_REQUEST.getStatusCode()) {
+                return passThroughError(response);
+            }
+            var version = response.readEntity(AgentConfigurationVersionInternal.class);
+            return Response.status(response.getStatus()).entity(agentMapper.map(version)).build();
+        });
+    }
+
+    /**
+     * Runs the handler on the upstream response and always closes it. Used instead of try-with-resources, which
+     * javac instruments with an extra null check on the close path that cannot be reached by tests.
+     */
+    private static Response consume(Response response, UnaryOperator<Response> handler) {
+        try {
+            return handler.apply(response);
+        } finally {
+            response.close();
+        }
+    }
+
+    private static Response passThroughError(Response response) {
+        var body = response.readEntity(String.class);
+        var mediaType = response.getMediaType() != null ? response.getMediaType() : MediaType.APPLICATION_JSON_TYPE;
+        return Response.status(response.getStatus()).type(mediaType).entity(body).build();
+    }
+
+    @Override
+    public Response getAgentConfigurationVersions(String id) {
+        return consume(agentInternalApi.getAgentConfigurationVersions(id), response -> {
+            if (response.getStatus() >= Response.Status.BAD_REQUEST.getStatusCode()) {
+                return passThroughError(response);
+            }
+            var internalList = response.readEntity(AgentConfigurationVersionListInternal.class);
+            var result = new AgentConfigurationVersionListDTO();
+            var versions = internalList.getVersions();
+            result.setVersions(versions != null
+                    ? versions.stream().map(agentMapper::map).toList()
+                    : List.of());
+            return Response.ok(result).build();
+        });
     }
 
     @Override
