@@ -9,6 +9,7 @@ tags:
   - name: provider
   - name: agent
   - name: tool
+  - name: application
   - name: model
   - name: scaffold
   - name: skill
@@ -436,6 +437,26 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ToolPageResult'
+
+  /applications:
+    get:
+      x-onecx:
+        permissions:
+          tools:
+            - read
+      tags:
+        - application
+      description: Get the OneCX products and applications that can own the permissions of an internal MCP server
+      operationId: getApplications
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ApplicationInfo'
 
   /tools/{toolId}/discovered-tools:
     post:
@@ -1471,6 +1492,15 @@ paths:
                 $ref: '#/components/schemas/ProblemDetailResponse'
 components:
   schemas:
+    ApplicationInfo:
+      type: object
+      properties:
+        productName:
+          type: string
+        appId:
+          type: string
+        name:
+          type: string
     AgentFilter:
       type: object
       properties:
@@ -1917,6 +1947,12 @@ components:
         external:
           type: boolean
           description: True when the MCP server is outside OneCX; such servers have no OneCX permission coverage
+        productName:
+          type: string
+          description: OneCX product that holds the permissions of an internal MCP server; required when external is false
+        appId:
+          type: string
+          description: OneCX application id that holds the permissions of an internal MCP server; required when external is false
     CreateToolRequest:
       type: object
       properties:
@@ -1936,6 +1972,10 @@ components:
           $ref: '#/components/schemas/AuthMode'
         external:
           type: boolean
+        productName:
+          type: string
+        appId:
+          type: string
     UpdateToolRequest:
       type: object
       required:
@@ -1960,6 +2000,10 @@ components:
           $ref: '#/components/schemas/AuthMode'
         external:
           type: boolean
+        productName:
+          type: string
+        appId:
+          type: string
     ToolSearchCriteria:
       type: object
       properties:

@@ -184,6 +184,19 @@
                             <skipCache>true</skipCache>
                         </configuration>
                     </execution>
+                    <execution>
+                        <id>permission-svc-internal</id>
+                        <phase>generate-resources</phase>
+                        <goals>
+                            <goal>wget</goal>
+                        </goals>
+                        <configuration>
+                            <uri>https://raw.githubusercontent.com/onecx/onecx-permission-svc/refs/heads/main/src/main/openapi/onecx-permission-internal.yaml</uri>
+                            <outputDirectory>target/tmp/openapi</outputDirectory>
+                            <outputFileName>permission-svc-internal.yaml</outputFileName>
+                            <skipCache>true</skipCache>
+                        </configuration>
+                    </execution>
                 </executions>
             </plugin>
         </plugins>
