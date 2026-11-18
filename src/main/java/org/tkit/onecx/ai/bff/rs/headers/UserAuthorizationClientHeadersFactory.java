@@ -11,10 +11,11 @@ import org.eclipse.microprofile.rest.client.ext.ClientHeadersFactory;
 @ApplicationScoped
 public class UserAuthorizationClientHeadersFactory implements ClientHeadersFactory {
 
-    private static final String USER_AUTHORIZATION = "UserAuthorization";
-
     @ConfigProperty(name = "tkit.rs.context.token.header-param", defaultValue = "apm-principal-token")
     String principalTokenHeader;
+
+    @ConfigProperty(name = "onecx.bff.user-authorization-header", defaultValue = "UserAuthorization")
+    String userAuthorizationHeader;
 
     @Override
     public MultivaluedMap<String, String> update(MultivaluedMap<String, String> incomingHeaders,
@@ -28,7 +29,7 @@ public class UserAuthorizationClientHeadersFactory implements ClientHeadersFacto
 
         String incomingAuthorization = getFirstIgnoreCase(incomingHeaders, HttpHeaders.AUTHORIZATION);
         if (incomingAuthorization != null && !incomingAuthorization.isBlank()) {
-            updatedHeaders.putSingle(USER_AUTHORIZATION, incomingAuthorization);
+            updatedHeaders.putSingle(userAuthorizationHeader, incomingAuthorization);
         }
 
         return updatedHeaders;
