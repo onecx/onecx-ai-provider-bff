@@ -11,10 +11,10 @@ import org.eclipse.microprofile.rest.client.ext.ClientHeadersFactory;
 @ApplicationScoped
 public class UserAuthorizationClientHeadersFactory implements ClientHeadersFactory {
 
-    @ConfigProperty(name = "tkit.rs.context.token.header-param", defaultValue = "apm-principal-token")
+    @ConfigProperty(name = "tkit.rs.context.token.header-param")
     String principalTokenHeader;
 
-    @ConfigProperty(name = "onecx.bff.user-authorization-header", defaultValue = "UserAuthorization")
+    @ConfigProperty(name = "onecx.bff.user-authorization-header")
     String userAuthorizationHeader;
 
     @Override
