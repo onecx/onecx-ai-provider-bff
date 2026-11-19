@@ -331,7 +331,7 @@ class AgentRestControllerMockTest extends AbstractTest {
     @Test
     void listPassesThroughErrorBody() {
         var api = mock(AgentInternalApi.class);
-        var listResponse = new StubResponse(Response.Status.CONFLICT.getStatusCode())
+        var listResponse = new StubResponse(Response.Status.BAD_REQUEST.getStatusCode())
                 .entity("{\"errorCode\":\"CONFLICT\"}");
         when(api.getAgentConfigurationVersions("1")).thenReturn(listResponse);
         QuarkusMock.installMockForType(api, AgentInternalApi.class, RestClient.LITERAL);
@@ -342,14 +342,14 @@ class AgentRestControllerMockTest extends AbstractTest {
                 .contentType(APPLICATION_JSON)
                 .get("1/configuration/versions")
                 .then()
-                .statusCode(Response.Status.CONFLICT.getStatusCode())
+                .statusCode(Response.Status.BAD_REQUEST.getStatusCode())
                 .body("errorCode", equalTo("CONFLICT"));
     }
 
     @Test
     void createPassesThroughDuplicateNameProblemDetail() {
         var api = mock(AgentInternalApi.class);
-        var createResponse = new StubResponse(Response.Status.CONFLICT.getStatusCode())
+        var createResponse = new StubResponse(Response.Status.BAD_REQUEST.getStatusCode())
                 .entity("{\"errorCode\":\"DUPLICATE_NAME\",\"detail\":\"Version name already exists\"}");
         when(api.createAgentConfigurationVersion(eq("1"), any(CreateAgentConfigurationVersionInternal.class)))
                 .thenReturn(createResponse);
@@ -362,7 +362,7 @@ class AgentRestControllerMockTest extends AbstractTest {
                 .body(AgentRestControllerTest.configurationVersionRequest())
                 .post("1/configuration/versions")
                 .then()
-                .statusCode(Response.Status.CONFLICT.getStatusCode())
+                .statusCode(Response.Status.BAD_REQUEST.getStatusCode())
                 .body("errorCode", equalTo("DUPLICATE_NAME"))
                 .body("detail", equalTo("Version name already exists"));
     }
@@ -389,7 +389,7 @@ class AgentRestControllerMockTest extends AbstractTest {
     @Test
     void createAgentPassesThroughDuplicateNameProblemDetail() {
         var api = mock(AgentInternalApi.class);
-        var createResponse = new StubResponse(Response.Status.CONFLICT.getStatusCode())
+        var createResponse = new StubResponse(Response.Status.BAD_REQUEST.getStatusCode())
                 .mediaType(APPLICATION_JSON_TYPE)
                 .entity("{\"errorCode\":\"DUPLICATE_NAME\",\"detail\":\"Agent name already exists\"}");
         when(api.createAgent(any(CreateAgentRequestInternal.class))).thenReturn(createResponse);
@@ -407,7 +407,7 @@ class AgentRestControllerMockTest extends AbstractTest {
                 .body(createDTO)
                 .post()
                 .then()
-                .statusCode(Response.Status.CONFLICT.getStatusCode())
+                .statusCode(Response.Status.BAD_REQUEST.getStatusCode())
                 .body("errorCode", equalTo("DUPLICATE_NAME"))
                 .body("detail", equalTo("Agent name already exists"));
     }

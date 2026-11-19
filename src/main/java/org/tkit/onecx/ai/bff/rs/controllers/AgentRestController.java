@@ -104,6 +104,25 @@ public class AgentRestController implements AgentApiService {
         });
     }
 
+    @Override
+    public Response getAgentConfigurationVersions(String id) {
+        return consume(agentInternalApi.getAgentConfigurationVersions(id), response -> {
+            if (response.getStatus() >= Response.Status.BAD_REQUEST.getStatusCode()) {
+                return passThroughError(response);
+            }
+            var internalList = response.readEntity(AgentConfigurationVersionListInternal.class);
+            var result = new AgentConfigurationVersionListDTO();
+            if (internalList == null) {
+                return Response.ok(result).build();
+            }
+            var versions = internalList.getVersions();
+            result.setVersions(versions != null
+                    ? versions.stream().map(agentMapper::map).toList()
+                    : List.of());
+            return Response.ok(result).build();
+        });
+    }
+
     /**
      * Runs the handler on the upstream response and always closes it. Used instead of try-with-resources, which
      * javac instruments with an extra null check on the close path that cannot be reached by tests.
@@ -120,22 +139,6 @@ public class AgentRestController implements AgentApiService {
         var body = response.readEntity(String.class);
         var mediaType = response.getMediaType() != null ? response.getMediaType() : MediaType.APPLICATION_JSON_TYPE;
         return Response.status(response.getStatus()).type(mediaType).entity(body).build();
-    }
-
-    @Override
-    public Response getAgentConfigurationVersions(String id) {
-        return consume(agentInternalApi.getAgentConfigurationVersions(id), response -> {
-            if (response.getStatus() >= Response.Status.BAD_REQUEST.getStatusCode()) {
-                return passThroughError(response);
-            }
-            var internalList = response.readEntity(AgentConfigurationVersionListInternal.class);
-            var result = new AgentConfigurationVersionListDTO();
-            var versions = internalList.getVersions();
-            result.setVersions(versions != null
-                    ? versions.stream().map(agentMapper::map).toList()
-                    : List.of());
-            return Response.ok(result).build();
-        });
     }
 
     @Override
