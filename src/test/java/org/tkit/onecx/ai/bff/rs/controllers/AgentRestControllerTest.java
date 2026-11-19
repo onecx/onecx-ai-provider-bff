@@ -212,7 +212,7 @@ class AgentRestControllerTest extends AbstractTest {
                         .withBody(JsonBody.json(createRequest)))
                 .withId(MOCK_ID)
                 .respond(httpRequest -> response()
-                        .withStatusCode(Response.Status.CONFLICT.getStatusCode())
+                        .withStatusCode(Response.Status.BAD_REQUEST.getStatusCode())
                         .withContentType(MediaType.APPLICATION_JSON)
                         .withBody("{\"errorCode\":\"DUPLICATE_NAME\",\"detail\":\"Agent name already exists\"}"));
 
@@ -229,7 +229,7 @@ class AgentRestControllerTest extends AbstractTest {
                 .body(createDTO)
                 .post()
                 .then()
-                .statusCode(Response.Status.CONFLICT.getStatusCode())
+                .statusCode(Response.Status.BAD_REQUEST.getStatusCode())
                 .body("errorCode", equalTo("DUPLICATE_NAME"))
                 .body("detail", equalTo("Agent name already exists"));
     }
