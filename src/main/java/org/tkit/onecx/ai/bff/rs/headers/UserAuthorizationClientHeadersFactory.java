@@ -14,7 +14,7 @@ public class UserAuthorizationClientHeadersFactory implements ClientHeadersFacto
     @ConfigProperty(name = "tkit.rs.context.token.header-param")
     String principalTokenHeader;
 
-    @ConfigProperty(name = "onecx.bff.user-authorization-header")
+    @ConfigProperty(name = "onecx.user-authorization-header")
     String userAuthorizationHeader;
 
     @Override
