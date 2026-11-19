@@ -132,7 +132,8 @@ class ToolRestControllerTest extends AbstractTest {
         ToolInternal fakeData = new ToolInternal()
                 .id("1").name("tool1").description("desc").type(ToolTypeInternal.MCP)
                 .url("http://tool").apiKey("key").executionPolicy(ExecutionPolicyInternal.ALWAYS_ASK)
-                .authMode(AuthModeInternal.API_KEY);
+                .authMode(AuthModeInternal.API_KEY)
+                .external(false).productName("onecx-product").appId("onecx-app");
 
         String testId = "1";
         mockServerClient.when(
@@ -161,6 +162,9 @@ class ToolRestControllerTest extends AbstractTest {
         Assertions.assertEquals(fakeData.getType().name(), response.getType().name());
         Assertions.assertEquals(fakeData.getExecutionPolicy().name(), response.getExecutionPolicy().name());
         Assertions.assertEquals(fakeData.getAuthMode().name(), response.getAuthMode().name());
+        Assertions.assertEquals(fakeData.getExternal(), response.getExternal());
+        Assertions.assertEquals(fakeData.getProductName(), response.getProductName());
+        Assertions.assertEquals(fakeData.getAppId(), response.getAppId());
     }
 
     @Test
@@ -217,10 +221,16 @@ class ToolRestControllerTest extends AbstractTest {
         createRequest.setApiKey("key");
         createRequest.setExecutionPolicy(ExecutionPolicyInternal.NEVER_ASK);
         createRequest.setAuthMode(AuthModeInternal.OAUTH);
+        createRequest.setExternal(false);
+        createRequest.setProductName("onecx-product");
+        createRequest.setAppId("onecx-app");
 
         ToolInternal responseTool = new ToolInternal();
         responseTool.setId("new-id");
         responseTool.setName("New Tool");
+        responseTool.setExternal(false);
+        responseTool.setProductName("onecx-product");
+        responseTool.setAppId("onecx-app");
 
         mockServerClient.when(
                 request().withPath("/internal/tools")
@@ -240,6 +250,9 @@ class ToolRestControllerTest extends AbstractTest {
         createDTO.setApiKey("key");
         createDTO.setExecutionPolicy(ExecutionPolicyDTO.NEVER_ASK);
         createDTO.setAuthMode(AuthModeDTO.OAUTH);
+        createDTO.setExternal(false);
+        createDTO.setProductName("onecx-product");
+        createDTO.setAppId("onecx-app");
 
         var response = given()
                 .when()
@@ -255,6 +268,9 @@ class ToolRestControllerTest extends AbstractTest {
 
         Assertions.assertNotNull(response);
         Assertions.assertEquals(responseTool.getName(), response.getName());
+        Assertions.assertEquals(responseTool.getExternal(), response.getExternal());
+        Assertions.assertEquals(responseTool.getProductName(), response.getProductName());
+        Assertions.assertEquals(responseTool.getAppId(), response.getAppId());
     }
 
     @Test
@@ -263,10 +279,16 @@ class ToolRestControllerTest extends AbstractTest {
         updateRequest.setName("Updated Tool");
         updateRequest.setType(ToolTypeInternal.CUSTOM);
         updateRequest.setModificationCount(0);
+        updateRequest.setExternal(true);
+        updateRequest.setProductName("onecx-product");
+        updateRequest.setAppId("onecx-app");
 
         ToolInternal responseTool = new ToolInternal();
         responseTool.setId("1");
         responseTool.setName("Updated Tool");
+        responseTool.setExternal(true);
+        responseTool.setProductName("onecx-product");
+        responseTool.setAppId("onecx-app");
 
         String testId = "1";
         mockServerClient.when(
@@ -283,6 +305,9 @@ class ToolRestControllerTest extends AbstractTest {
         updateDTO.setName("Updated Tool");
         updateDTO.setType(ToolTypeDTO.CUSTOM);
         updateDTO.setModificationCount(0);
+        updateDTO.setExternal(true);
+        updateDTO.setProductName("onecx-product");
+        updateDTO.setAppId("onecx-app");
 
         var response = given()
                 .when()
@@ -298,6 +323,9 @@ class ToolRestControllerTest extends AbstractTest {
 
         Assertions.assertNotNull(response);
         Assertions.assertEquals(responseTool.getName(), response.getName());
+        Assertions.assertEquals(responseTool.getExternal(), response.getExternal());
+        Assertions.assertEquals(responseTool.getProductName(), response.getProductName());
+        Assertions.assertEquals(responseTool.getAppId(), response.getAppId());
     }
 
     @Test

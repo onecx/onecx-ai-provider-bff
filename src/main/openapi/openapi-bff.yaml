@@ -1946,13 +1946,14 @@ components:
           $ref: '#/components/schemas/AuthMode'
         external:
           type: boolean
-          description: True when the MCP server is outside OneCX; such servers have no OneCX permission coverage
+          default: false
+          description: True when the MCP server is outside OneCX; such servers have no OneCX permission coverage. Defaults to false; onecx-ai-provider-svc rejects internal tools without productName and appId.
         productName:
           type: string
-          description: OneCX product that holds the permissions of an internal MCP server; required when external is false
+          description: OneCX product that holds the permissions of an internal MCP server; required when external is false (enforced by onecx-ai-provider-svc)
         appId:
           type: string
-          description: OneCX application id that holds the permissions of an internal MCP server; required when external is false
+          description: OneCX application id that holds the permissions of an internal MCP server; required when external is false (enforced by onecx-ai-provider-svc)
     CreateToolRequest:
       type: object
       properties:
@@ -1972,10 +1973,14 @@ components:
           $ref: '#/components/schemas/AuthMode'
         external:
           type: boolean
+          default: false
+          description: True when the MCP server is outside OneCX. Defaults to false; the BFF forwards it as-is and onecx-ai-provider-svc rejects internal tools (external=false) without productName and appId with 400 MISSING_TOOL_COORDINATES.
         productName:
           type: string
+          description: OneCX product that holds the permissions of an internal MCP server; required when external is false (enforced by onecx-ai-provider-svc)
         appId:
           type: string
+          description: OneCX application id that holds the permissions of an internal MCP server; required when external is false (enforced by onecx-ai-provider-svc)
     UpdateToolRequest:
       type: object
       required:
@@ -2000,10 +2005,14 @@ components:
           $ref: '#/components/schemas/AuthMode'
         external:
           type: boolean
+          default: false
+          description: True when the MCP server is outside OneCX. Defaults to false; the BFF forwards it as-is and onecx-ai-provider-svc rejects internal tools (external=false) without productName and appId with 400 MISSING_TOOL_COORDINATES.
         productName:
           type: string
+          description: OneCX product that holds the permissions of an internal MCP server; required when external is false (enforced by onecx-ai-provider-svc)
         appId:
           type: string
+          description: OneCX application id that holds the permissions of an internal MCP server; required when external is false (enforced by onecx-ai-provider-svc)
     ToolSearchCriteria:
       type: object
       properties:
