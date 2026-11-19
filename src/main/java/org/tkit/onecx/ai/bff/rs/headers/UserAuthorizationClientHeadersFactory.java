@@ -5,13 +5,17 @@ import jakarta.ws.rs.core.HttpHeaders;
 import jakarta.ws.rs.core.MultivaluedHashMap;
 import jakarta.ws.rs.core.MultivaluedMap;
 
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.rest.client.ext.ClientHeadersFactory;
 
 @ApplicationScoped
 public class UserAuthorizationClientHeadersFactory implements ClientHeadersFactory {
 
-    private static final String APM_PRINCIPAL_TOKEN = "apm-principal-token";
-    private static final String USER_AUTHORIZATION = "UserAuthorization";
+    @ConfigProperty(name = "tkit.rs.context.token.header-param")
+    String principalTokenHeader;
+
+    @ConfigProperty(name = "onecx.user-authorization-header")
+    String userAuthorizationHeader;
 
     @Override
     public MultivaluedMap<String, String> update(MultivaluedMap<String, String> incomingHeaders,
@@ -21,11 +25,11 @@ public class UserAuthorizationClientHeadersFactory implements ClientHeadersFacto
             updatedHeaders.putAll(clientOutgoingHeaders);
         }
 
-        propagateHeader(incomingHeaders, updatedHeaders, APM_PRINCIPAL_TOKEN);
+        propagateHeader(incomingHeaders, updatedHeaders, principalTokenHeader);
 
         String incomingAuthorization = getFirstIgnoreCase(incomingHeaders, HttpHeaders.AUTHORIZATION);
         if (incomingAuthorization != null && !incomingAuthorization.isBlank()) {
-            updatedHeaders.putSingle(USER_AUTHORIZATION, incomingAuthorization);
+            updatedHeaders.putSingle(userAuthorizationHeader, incomingAuthorization);
         }
 
         return updatedHeaders;
