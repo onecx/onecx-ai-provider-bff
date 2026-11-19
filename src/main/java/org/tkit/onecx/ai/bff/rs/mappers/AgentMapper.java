@@ -17,6 +17,18 @@ public interface AgentMapper {
 
     AgentSearchCriteriaInternal mapCriteria(AgentSearchCriteriaDTO agentSearchCriteriaDTO);
 
+    CreateAgentConfigurationVersionInternal mapCreateConfigurationVersion(
+            CreateAgentConfigurationVersionDTO createAgentConfigurationVersionDTO);
+
+    AgentConfigurationVersionDTO map(AgentConfigurationVersionInternal agentConfigurationVersion);
+
+    @Mapping(target = "removeToolRulesItem", ignore = true)
+    McpServerConfigurationDTO map(McpServerConfigurationInternal mcpServerConfiguration);
+
+    @Mapping(target = "removeSkillsItem", ignore = true)
+    @Mapping(target = "removeMcpServersItem", ignore = true)
+    AgentConfigurationDTO map(AgentConfigurationInternal agentConfiguration);
+
     @Mapping(target = "removeToolsItem", ignore = true)
     @Mapping(target = "removeGroupsItem", ignore = true)
     AgentDTO map(AgentInternal agent);

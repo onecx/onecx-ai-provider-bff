@@ -2,12 +2,25 @@ package org.tkit.onecx.ai.bff.rs.controllers;
 
 import static io.restassured.RestAssured.given;
 import static jakarta.ws.rs.core.MediaType.APPLICATION_JSON;
+import static org.hamcrest.Matchers.equalTo;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
 
+import java.lang.annotation.Annotation;
+import java.net.URI;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
 
 import jakarta.ws.rs.HttpMethod;
+import jakarta.ws.rs.core.EntityTag;
+import jakarta.ws.rs.core.GenericType;
+import jakarta.ws.rs.core.Link;
+import jakarta.ws.rs.core.MultivaluedHashMap;
+import jakarta.ws.rs.core.MultivaluedMap;
+import jakarta.ws.rs.core.NewCookie;
 import jakarta.ws.rs.core.Response;
 
 import org.junit.jupiter.api.AfterEach;
@@ -19,7 +32,6 @@ import org.mockserver.model.MediaType;
 import org.tkit.onecx.ai.bff.rs.AbstractTest;
 import org.tkit.quarkus.log.cdi.LogService;
 
-// Client model classes (for MockServer responses)
 import gen.org.tkit.onecx.ai.management.bff.client.model.*;
 // BFF API DTOs (for RestAssured requests/responses)
 import gen.org.tkit.onecx.ai.management.bff.rs.internal.model.*;
@@ -185,6 +197,41 @@ class AgentRestControllerTest extends AbstractTest {
 
         Assertions.assertNotNull(response);
         Assertions.assertEquals(responseAgent.getName(), response.getName());
+    }
+
+    @Test
+    void createAgentDuplicateNamePassesThroughProblemDetail() {
+        CreateAgentRequestInternal createRequest = new CreateAgentRequestInternal();
+        createRequest.setName("Duplicate Agent");
+        createRequest.setStatus(AgentStatusInternal.DRAFT);
+        createRequest.setA2aEnabled(false);
+
+        mockServerClient.when(
+                request().withPath("/internal/agents")
+                        .withMethod(HttpMethod.POST)
+                        .withBody(JsonBody.json(createRequest)))
+                .withId(MOCK_ID)
+                .respond(httpRequest -> response()
+                        .withStatusCode(Response.Status.CONFLICT.getStatusCode())
+                        .withContentType(MediaType.APPLICATION_JSON)
+                        .withBody("{\"errorCode\":\"DUPLICATE_NAME\",\"detail\":\"Agent name already exists\"}"));
+
+        CreateAgentRequestDTO createDTO = new CreateAgentRequestDTO();
+        createDTO.setName("Duplicate Agent");
+        createDTO.setStatus(AgentStatusDTO.DRAFT);
+        createDTO.setA2aEnabled(false);
+
+        given()
+                .when()
+                .auth().oauth2(keycloakTestClient.getAccessToken(ADMIN))
+                .header(APM_HEADER_PARAM, ADMIN)
+                .contentType(APPLICATION_JSON)
+                .body(createDTO)
+                .post()
+                .then()
+                .statusCode(Response.Status.CONFLICT.getStatusCode())
+                .body("errorCode", equalTo("DUPLICATE_NAME"))
+                .body("detail", equalTo("Agent name already exists"));
     }
 
     @Test
@@ -692,5 +739,311 @@ class AgentRestControllerTest extends AbstractTest {
                 .put(agentId + "/tools/" + toolId + "/mcp-tool-rules")
                 .then()
                 .statusCode(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode());
+    }
+
+    @Test
+    void createAgentConfigurationVersionTest() {
+        String agentId = "a1";
+        CreateAgentConfigurationVersionInternal request = new CreateAgentConfigurationVersionInternal()
+                .name("baseline");
+        AgentConfigurationVersionInternal createdVersion = new AgentConfigurationVersionInternal()
+                .id("version-1")
+                .name("baseline")
+                .active(true);
+
+        mockServerClient.when(
+                request().withPath("/internal/agents/" + agentId + "/configuration/versions")
+                        .withMethod(HttpMethod.POST)
+                        .withBody(JsonBody.json(request)))
+                .withId(MOCK_ID)
+                .respond(httpRequest -> response()
+                        .withStatusCode(Response.Status.CREATED.getStatusCode())
+                        .withContentType(MediaType.APPLICATION_JSON)
+                        .withBody(JsonBody.json(createdVersion)));
+
+        var response = given()
+                .when()
+                .auth().oauth2(keycloakTestClient.getAccessToken(ADMIN))
+                .header(APM_HEADER_PARAM, ADMIN)
+                .contentType(APPLICATION_JSON)
+                .body(new CreateAgentConfigurationVersionDTO().name("baseline"))
+                .post(agentId + "/configuration/versions")
+                .then()
+                .statusCode(Response.Status.CREATED.getStatusCode())
+                .extract()
+                .as(AgentConfigurationVersionDTO.class);
+
+        Assertions.assertEquals("version-1", response.getId());
+        Assertions.assertEquals("baseline", response.getName());
+        Assertions.assertTrue(response.getActive());
+    }
+
+    @Test
+    void getAgentConfigurationVersionTest() {
+        String agentId = "a1";
+        String versionId = "version-1";
+        AgentConfigurationInternal configuration = new AgentConfigurationInternal().schemaVersion("1.0");
+
+        mockServerClient.when(
+                request().withPath("/internal/agents/" + agentId + "/configuration/versions/" + versionId)
+                        .withMethod(HttpMethod.GET))
+                .withId(MOCK_ID)
+                .respond(httpRequest -> response()
+                        .withStatusCode(Response.Status.OK.getStatusCode())
+                        .withContentType(MediaType.APPLICATION_JSON)
+                        .withBody(JsonBody.json(configuration)));
+
+        var result = given()
+                .when()
+                .auth().oauth2(keycloakTestClient.getAccessToken(ADMIN))
+                .header(APM_HEADER_PARAM, ADMIN)
+                .contentType(APPLICATION_JSON)
+                .get(agentId + "/configuration/versions/" + versionId)
+                .then()
+                .statusCode(Response.Status.OK.getStatusCode())
+                .extract()
+                .as(AgentConfigurationDTO.class);
+
+        Assertions.assertEquals("1.0", result.getSchemaVersion());
+    }
+
+    @Test
+    void activateAgentConfigurationVersionTest() {
+        String agentId = "a1";
+        String versionId = "version-1";
+        AgentConfigurationVersionInternal activatedVersion = new AgentConfigurationVersionInternal()
+                .id(versionId)
+                .name("baseline")
+                .active(true);
+
+        mockServerClient.when(
+                request().withPath("/internal/agents/" + agentId + "/configuration/versions/" + versionId + "/activate")
+                        .withMethod(HttpMethod.PUT))
+                .withId(MOCK_ID)
+                .respond(httpRequest -> response()
+                        .withStatusCode(Response.Status.OK.getStatusCode())
+                        .withContentType(MediaType.APPLICATION_JSON)
+                        .withBody(JsonBody.json(activatedVersion)));
+
+        var result = given()
+                .when()
+                .auth().oauth2(keycloakTestClient.getAccessToken(ADMIN))
+                .header(APM_HEADER_PARAM, ADMIN)
+                .contentType(APPLICATION_JSON)
+                .put(agentId + "/configuration/versions/" + versionId + "/activate")
+                .then()
+                .statusCode(Response.Status.OK.getStatusCode())
+                .extract()
+                .as(AgentConfigurationVersionDTO.class);
+
+        Assertions.assertEquals(versionId, result.getId());
+        Assertions.assertEquals("baseline", result.getName());
+        Assertions.assertTrue(result.getActive());
+    }
+
+    @Test
+    void createRequiresWritePermission() {
+        given()
+                .auth().oauth2(keycloakTestClient.getAccessToken(USER))
+                .header(APM_HEADER_PARAM, USER)
+                .contentType(APPLICATION_JSON)
+                .body(configurationVersionRequest())
+                .post("1/configuration/versions")
+                .then()
+                .statusCode(Response.Status.FORBIDDEN.getStatusCode());
+    }
+
+    @Test
+    void activateRequiresWritePermission() {
+        given()
+                .auth().oauth2(keycloakTestClient.getAccessToken(USER))
+                .header(APM_HEADER_PARAM, USER)
+                .contentType(APPLICATION_JSON)
+                .put("1/configuration/versions/version-2/activate")
+                .then()
+                .statusCode(Response.Status.FORBIDDEN.getStatusCode());
+    }
+
+    static CreateAgentConfigurationVersionDTO configurationVersionRequest() {
+        var request = new CreateAgentConfigurationVersionDTO();
+        request.setName("release-2");
+        return request;
+    }
+
+    /**
+     * Plain JAX-RS {@link Response} stub. Mockito cannot mock {@link Response} in the packaged IT run,
+     * because the static factories and mock creation need the JAX-RS RuntimeDelegate lookup.
+     */
+    static final class StubResponse extends Response {
+        private final int status;
+        private jakarta.ws.rs.core.MediaType mediaType;
+        private Object entity;
+        private RuntimeException readFailure;
+        private RuntimeException closeFailure;
+        private int closeCount;
+
+        StubResponse(int status) {
+            this.status = status;
+        }
+
+        StubResponse mediaType(jakarta.ws.rs.core.MediaType mediaType) {
+            this.mediaType = mediaType;
+            return this;
+        }
+
+        StubResponse entity(Object entity) {
+            this.entity = entity;
+            return this;
+        }
+
+        StubResponse readFails(RuntimeException failure) {
+            this.readFailure = failure;
+            return this;
+        }
+
+        StubResponse closeFails(RuntimeException failure) {
+            this.closeFailure = failure;
+            return this;
+        }
+
+        int closeCount() {
+            return closeCount;
+        }
+
+        @Override
+        public int getStatus() {
+            return status;
+        }
+
+        @Override
+        public StatusType getStatusInfo() {
+            return Status.fromStatusCode(status);
+        }
+
+        @Override
+        public Object getEntity() {
+            return entity;
+        }
+
+        @Override
+        public <T> T readEntity(Class<T> type) {
+            if (readFailure != null) {
+                throw readFailure;
+            }
+            return type.cast(entity);
+        }
+
+        @Override
+        public <T> T readEntity(GenericType<T> type) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public <T> T readEntity(Class<T> type, Annotation[] annotations) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public <T> T readEntity(GenericType<T> type, Annotation[] annotations) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public boolean hasEntity() {
+            return entity != null;
+        }
+
+        @Override
+        public boolean bufferEntity() {
+            return false;
+        }
+
+        @Override
+        public void close() {
+            closeCount++;
+            if (closeFailure != null) {
+                throw closeFailure;
+            }
+        }
+
+        @Override
+        public jakarta.ws.rs.core.MediaType getMediaType() {
+            return mediaType;
+        }
+
+        @Override
+        public Locale getLanguage() {
+            return null;
+        }
+
+        @Override
+        public int getLength() {
+            return -1;
+        }
+
+        @Override
+        public Set<String> getAllowedMethods() {
+            return Set.of();
+        }
+
+        @Override
+        public Map<String, NewCookie> getCookies() {
+            return Map.of();
+        }
+
+        @Override
+        public EntityTag getEntityTag() {
+            return null;
+        }
+
+        @Override
+        public Date getDate() {
+            return null;
+        }
+
+        @Override
+        public Date getLastModified() {
+            return null;
+        }
+
+        @Override
+        public URI getLocation() {
+            return null;
+        }
+
+        @Override
+        public Set<Link> getLinks() {
+            return Set.of();
+        }
+
+        @Override
+        public boolean hasLink(String relation) {
+            return false;
+        }
+
+        @Override
+        public Link getLink(String relation) {
+            return null;
+        }
+
+        @Override
+        public Link.Builder getLinkBuilder(String relation) {
+            return null;
+        }
+
+        @Override
+        public MultivaluedMap<String, Object> getMetadata() {
+            return new MultivaluedHashMap<>();
+        }
+
+        @Override
+        public MultivaluedMap<String, String> getStringHeaders() {
+            return new MultivaluedHashMap<>();
+        }
+
+        @Override
+        public String getHeaderString(String name) {
+            return null;
+        }
     }
 }
