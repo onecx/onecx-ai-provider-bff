@@ -9,6 +9,7 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 
+import jakarta.inject.Inject;
 import jakarta.ws.rs.core.HttpHeaders;
 import jakarta.ws.rs.core.MultivaluedHashMap;
 import jakarta.ws.rs.core.MultivaluedMap;
@@ -23,10 +24,11 @@ class UserAuthorizationClientHeadersFactoryTest {
     private static final String APM_PRINCIPAL_TOKEN = "apm-principal-token";
     private static final String USER_AUTHORIZATION = "UserAuthorization";
 
+    @Inject
+    UserAuthorizationClientHeadersFactory factory;
+
     @Test
     void updateShouldCopyOutgoingAndPropagateHeaders() {
-        UserAuthorizationClientHeadersFactory factory = new UserAuthorizationClientHeadersFactory();
-
         MultivaluedMap<String, String> incoming = new MultivaluedHashMap<>();
         incoming.putSingle("APM-PRINCIPAL-TOKEN", "id-token");
         incoming.putSingle("authorization", "Bearer user-token");
@@ -45,8 +47,6 @@ class UserAuthorizationClientHeadersFactoryTest {
 
     @Test
     void updateShouldHandleNullOutgoingAndSkipBlankHeaders() {
-        UserAuthorizationClientHeadersFactory factory = new UserAuthorizationClientHeadersFactory();
-
         MultivaluedMap<String, String> incoming = new MultivaluedHashMap<>();
         incoming.putSingle(APM_PRINCIPAL_TOKEN, " ");
         incoming.putSingle(HttpHeaders.AUTHORIZATION, "  ");
@@ -58,8 +58,6 @@ class UserAuthorizationClientHeadersFactoryTest {
 
     @Test
     void updateShouldHandleNullIncomingHeaders() {
-        UserAuthorizationClientHeadersFactory factory = new UserAuthorizationClientHeadersFactory();
-
         MultivaluedMap<String, String> outgoing = new MultivaluedHashMap<>();
         outgoing.putSingle(HttpHeaders.AUTHORIZATION, "Bearer app-token");
 
