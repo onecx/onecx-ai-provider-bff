@@ -1,5 +1,8 @@
 package org.tkit.onecx.ai.bff.rs.controllers;
 
+import java.util.ArrayList;
+import java.util.Objects;
+
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
@@ -21,7 +24,7 @@ import gen.org.tkit.onecx.ai.management.bff.rs.internal.model.ApplicationInfoDTO
 @LogService
 public class ApplicationRestController implements ApplicationApiService {
 
-    static final int MAX_APPLICATIONS = 1000;
+    static final int PAGE_SIZE = 1000;
 
     @Inject
     @RestClient
@@ -29,26 +32,38 @@ public class ApplicationRestController implements ApplicationApiService {
 
     @Override
     public Response getApplications() {
-        var criteria = new ApplicationSearchCriteriaPermissionSvc();
-        criteria.setPageNumber(0);
-        criteria.setPageSize(MAX_APPLICATIONS);
-        try (Response response = applicationInternalApi.searchApplications(criteria)) {
-            if (response.getStatus() != Response.Status.OK.getStatusCode()) {
-                return badGateway();
-            }
-            var page = response.readEntity(ApplicationPageResultPermissionSvc.class);
-            var result = page.getStream().stream()
-                    .map(app -> {
-                        var dto = new ApplicationInfoDTO();
-                        dto.setProductName(app.getProductName());
-                        dto.setAppId(app.getAppId());
-                        dto.setName(app.getName());
-                        return dto;
-                    })
-                    .toList();
+        var result = new ArrayList<ApplicationInfoDTO>();
+        ApplicationPageResultPermissionSvc page;
+        int pageNumber = 0;
+        try {
+            do {
+                page = searchPage(pageNumber++);
+                if (page == null) {
+                    return badGateway();
+                }
+                page.getStream().forEach(app -> {
+                    var dto = new ApplicationInfoDTO();
+                    dto.setProductName(app.getProductName());
+                    dto.setAppId(app.getAppId());
+                    dto.setName(app.getName());
+                    result.add(dto);
+                });
+            } while (!page.getStream().isEmpty()
+                    && result.size() < Objects.requireNonNullElse(page.getTotalElements(), 0L));
             return Response.ok(result).build();
         } catch (WebApplicationException | ProcessingException ex) {
             return badGateway();
+        }
+    }
+
+    private ApplicationPageResultPermissionSvc searchPage(int pageNumber) {
+        var criteria = new ApplicationSearchCriteriaPermissionSvc();
+        criteria.setPageNumber(pageNumber);
+        criteria.setPageSize(PAGE_SIZE);
+        try (Response response = applicationInternalApi.searchApplications(criteria)) {
+            return response.getStatus() == Response.Status.OK.getStatusCode()
+                    ? response.readEntity(ApplicationPageResultPermissionSvc.class)
+                    : null;
         }
     }
 

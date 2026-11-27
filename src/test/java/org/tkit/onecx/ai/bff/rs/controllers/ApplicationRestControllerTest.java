@@ -14,6 +14,7 @@ import jakarta.ws.rs.core.Response;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.mockserver.client.MockServerClient;
+import org.mockserver.matchers.MatchType;
 import org.mockserver.model.JsonBody;
 import org.mockserver.model.MediaType;
 import org.tkit.onecx.ai.bff.rs.AbstractTest;
@@ -79,6 +80,56 @@ class ApplicationRestControllerTest extends AbstractTest {
         assertThat(result[0].getProductName()).isEqualTo("onecx-product");
         assertThat(result[0].getAppId()).isEqualTo("onecx-app");
         assertThat(result[0].getName()).isEqualTo("OneCX App");
+    }
+
+    @Test
+    void getApplications_fetchesAllPagesTest() {
+        var first = new ApplicationPermissionSvc();
+        first.setProductName("onecx-product");
+        first.setAppId("onecx-app");
+        first.setName("First");
+        var second = new ApplicationPermissionSvc();
+        second.setProductName("onecx-product");
+        second.setAppId("onecx-app-2");
+        second.setName("Second");
+        var firstPage = new ApplicationPageResultPermissionSvc();
+        firstPage.setStream(List.of(first));
+        firstPage.setTotalElements(2L);
+        var secondPage = new ApplicationPageResultPermissionSvc();
+        secondPage.setStream(List.of(second));
+        secondPage.setTotalElements(2L);
+
+        mockServerClient.when(
+                request().withPath("/internal/applications/search").withMethod(HttpMethod.POST)
+                        .withBody(JsonBody.json("{\"pageNumber\":0}", MatchType.ONLY_MATCHING_FIELDS)))
+                .withPriority(100)
+                .withId(MOCK_ID)
+                .respond(httpRequest -> response()
+                        .withStatusCode(Response.Status.OK.getStatusCode())
+                        .withContentType(MediaType.APPLICATION_JSON)
+                        .withBody(JsonBody.json(firstPage)));
+        mockServerClient.when(
+                request().withPath("/internal/applications/search").withMethod(HttpMethod.POST)
+                        .withBody(JsonBody.json("{\"pageNumber\":1}", MatchType.ONLY_MATCHING_FIELDS)))
+                .withPriority(100)
+                .withId(MOCK_ID)
+                .respond(httpRequest -> response()
+                        .withStatusCode(Response.Status.OK.getStatusCode())
+                        .withContentType(MediaType.APPLICATION_JSON)
+                        .withBody(JsonBody.json(secondPage)));
+
+        var result = given()
+                .when()
+                .auth().oauth2(keycloakTestClient.getAccessToken(ADMIN))
+                .header(APM_HEADER_PARAM, ADMIN)
+                .contentType(APPLICATION_JSON)
+                .get()
+                .then()
+                .statusCode(Response.Status.OK.getStatusCode())
+                .extract().as(gen.org.tkit.onecx.ai.management.bff.rs.internal.model.ApplicationInfoDTO[].class);
+
+        assertThat(result).extracting(gen.org.tkit.onecx.ai.management.bff.rs.internal.model.ApplicationInfoDTO::getName)
+                .containsExactly("First", "Second");
     }
 
     @Test
