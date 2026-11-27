@@ -9,6 +9,7 @@ tags:
   - name: provider
   - name: agent
   - name: tool
+  - name: application
   - name: model
   - name: scaffold
   - name: skill
@@ -436,6 +437,26 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ToolPageResult'
+
+  /applications:
+    get:
+      x-onecx:
+        permissions:
+          tools:
+            - read
+      tags:
+        - application
+      description: Get the OneCX products and applications that can own the permissions of an internal MCP server
+      operationId: getApplications
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ApplicationInfo'
 
   /tools/{toolId}/discovered-tools:
     post:
@@ -1471,6 +1492,15 @@ paths:
                 $ref: '#/components/schemas/ProblemDetailResponse'
 components:
   schemas:
+    ApplicationInfo:
+      type: object
+      properties:
+        productName:
+          type: string
+        appId:
+          type: string
+        name:
+          type: string
     AgentFilter:
       type: object
       properties:
@@ -1914,6 +1944,16 @@ components:
           $ref: '#/components/schemas/ExecutionPolicy'
         authMode:
           $ref: '#/components/schemas/AuthMode'
+        external:
+          type: boolean
+          default: false
+          description: True when the MCP server is outside OneCX; such servers have no OneCX permission coverage. Defaults to false; onecx-ai-provider-svc rejects internal tools without productName and appId.
+        productName:
+          type: string
+          description: OneCX product that holds the permissions of an internal MCP server; required when external is false (enforced by onecx-ai-provider-svc)
+        appId:
+          type: string
+          description: OneCX application id that holds the permissions of an internal MCP server; required when external is false (enforced by onecx-ai-provider-svc)
     CreateToolRequest:
       type: object
       properties:
@@ -1931,6 +1971,16 @@ components:
           $ref: '#/components/schemas/ExecutionPolicy'
         authMode:
           $ref: '#/components/schemas/AuthMode'
+        external:
+          type: boolean
+          default: false
+          description: True when the MCP server is outside OneCX. Defaults to false; the BFF forwards it as-is and onecx-ai-provider-svc rejects internal tools (external=false) without productName and appId with 400 MISSING_TOOL_COORDINATES.
+        productName:
+          type: string
+          description: OneCX product that holds the permissions of an internal MCP server; required when external is false (enforced by onecx-ai-provider-svc)
+        appId:
+          type: string
+          description: OneCX application id that holds the permissions of an internal MCP server; required when external is false (enforced by onecx-ai-provider-svc)
     UpdateToolRequest:
       type: object
       required:
@@ -1953,6 +2003,16 @@ components:
           $ref: '#/components/schemas/ExecutionPolicy'
         authMode:
           $ref: '#/components/schemas/AuthMode'
+        external:
+          type: boolean
+          default: false
+          description: True when the MCP server is outside OneCX. Defaults to false; the BFF forwards it as-is and onecx-ai-provider-svc rejects internal tools (external=false) without productName and appId with 400 MISSING_TOOL_COORDINATES.
+        productName:
+          type: string
+          description: OneCX product that holds the permissions of an internal MCP server; required when external is false (enforced by onecx-ai-provider-svc)
+        appId:
+          type: string
+          description: OneCX application id that holds the permissions of an internal MCP server; required when external is false (enforced by onecx-ai-provider-svc)
     ToolSearchCriteria:
       type: object
       properties:
@@ -2769,6 +2829,9 @@ components:
           $ref: '#/components/schemas/AgentMcpToolRule'
         orphaned:
           type: boolean
+        requiredPermission:
+          type: string
+          description: OneCX permission required to invoke the tool, as published by the MCP server in tool metadata. The sentinel value `<malformed>` indicates a non-string or malformed permission.
     DiscoveredToolInfoList:
       type: object
       properties:
